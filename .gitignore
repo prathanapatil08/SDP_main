@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+data/metrics.csv
+data/anomaly_results.csv
+data/incidents.sqlite3
+logs/
