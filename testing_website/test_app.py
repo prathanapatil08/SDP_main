@@ -117,7 +117,7 @@ class LoadManager:
         with self._lock:
             self._diagnostics[kind]["button_click_received"] = True
 
-    def start_script(self, script, timeout):
+    def start_script(self, script, timeout, arguments=None):
         if not self._script_lock.acquire(blocking=False):
             raise RuntimeError("Another project analysis or recovery script is already running.")
         try:
@@ -151,7 +151,7 @@ class LoadManager:
         def execute():
             try:
                 result = subprocess.run(
-                    [sys.executable, str(script)],
+                    [sys.executable, str(script)] + list(arguments or []),
                     cwd=str(BASE_DIR),
                     stdin=subprocess.DEVNULL,
                     capture_output=True,
@@ -698,8 +698,8 @@ def stop_project_flask():
     return True
 
 
-def run_project_script(script, timeout=45):
-    return get_load_manager().start_script(script, timeout)
+def run_project_script(script, timeout=45, arguments=None):
+    return get_load_manager().start_script(script, timeout, arguments)
 
 
 def count_anomalies():
@@ -724,6 +724,9 @@ def parse_rca_output(output):
     severity_match = re.search(r"Incident Severity:\s*(.+)", output)
     if not severity_match:
         return None
+    confidence_match = re.search(
+        r"Root Cause Confidence:\s*(\d+)%", output
+    )
 
     def section(start, end):
         match = re.search(
@@ -741,6 +744,17 @@ def parse_rca_output(output):
 
     return {
         "severity": severity_match.group(1).strip(),
+        "confidence": (
+            int(confidence_match.group(1))
+            if confidence_match
+            else None
+        ),
+        "timeline": section("Incident Timeline:", "Detected Symptoms:"),
+        "symptoms": section("Detected Symptoms:", "Supporting Evidence:"),
+        "evidence": section("Supporting Evidence:", "Root Cause Confidence:"),
+        "confidence_basis": section(
+            "Confidence Basis:", "Possible Root Cause:"
+        ),
         "causes": section("Possible Root Cause:", "Recommended Actions:"),
         "recommendations": section("Recommended Actions:", "Incident report saved to:"),
     }
@@ -807,7 +821,7 @@ st.session_state.setdefault("history", [])
 st.markdown(
     """
     <style>
-    .stApp { background: #f4f7fb; }
+    .stApp { background: #f4f7fb; color: #000; }
     [data-testid="stHeader"] { background: rgba(244, 247, 251, 0.86); }
     .block-container { max-width: 1440px; padding-top: 2rem; padding-bottom: 3rem; }
     .hero {
@@ -818,14 +832,25 @@ st.markdown(
         margin: .25rem 0 1.5rem; box-shadow: 0 18px 45px rgba(17, 35, 63, .18);
     }
     .hero h1 { color: white; font-size: 2.35rem; letter-spacing: -.04em; }
-    .hero p { color: #e0f2fe; margin-bottom: 0; font-size: 1.05rem; }
+    .hero p { color: #000; margin-bottom: 0; font-size: 1.05rem; }
+    .stApp p,
+    .stApp label,
+    .stApp small,
+    .stApp li,
+    .stApp a,
+    .stApp [data-testid="stCaptionContainer"],
+    .stApp [data-testid="stAlert"],
+    .stApp [data-testid="stMetricLabel"],
+    .stApp [data-testid="stMetricValue"],
+    div.stButton > button {
+        color: #000 !important;
+    }
     [data-testid="stMetric"] {
         background: linear-gradient(145deg, #ffffff, #f1f8fb);
         border: 1px solid #dce8f1; border-radius: 18px;
         padding: 1rem 1.15rem; box-shadow: 0 7px 22px rgba(25, 55, 90, .07);
     }
-    [data-testid="stMetricLabel"] { color: #52657d; font-weight: 650; }
-    [data-testid="stMetricValue"] { color: #10233f; }
+    [data-testid="stMetricLabel"] { font-weight: 650; }
     div.stButton > button {
         border-radius: 12px; min-height: 2.8rem; font-weight: 650;
         border: 1px solid #cbd9e6; transition: transform .15s ease, box-shadow .15s ease;
@@ -908,18 +933,55 @@ if script_job and script_job["state"] != "running":
         action_names = {
             ANOMALY_SCRIPT: "Run AI Anomaly Detection",
             ROOT_CAUSE_SCRIPT: "Run Root Cause Analysis",
-            SELF_HEALING_SCRIPT: "Recover Flask Application",
+            SELF_HEALING_SCRIPT: "Run Recovery Policy",
         }
         action = action_names[script_job["script"]]
         success = error is None and result is not None and result.returncode == 0
         details = ""
         if success and script_job["script"] == SELF_HEALING_SCRIPT:
-            success = flask_is_healthy()
-            details = (
-                "Flask application recovered."
-                if success
-                else "Recovery script completed, but Flask health check did not return HTTP 200."
+            recovery_result = re.search(
+                r"^Recovery result:\s*(.+)$",
+                output,
+                flags=re.MULTILINE,
             )
+            outcome = recovery_result.group(1).strip() if recovery_result else ""
+            if outcome == "RECOVERED":
+                success = flask_is_healthy()
+                details = (
+                    "RECOVERED: Flask health check passed."
+                    if success
+                    else "Recovery script returned success, but Flask health check failed."
+                )
+            else:
+                details = "\n".join(
+                    line
+                    for line in output.splitlines()
+                    if line.startswith(
+                        (
+                            "Incident:",
+                            "Probable cause:",
+                            "Policy decision:",
+                            "Verification:",
+                            "Escalation:",
+                            "Approval source timestamp:",
+                            "Top memory consumers:",
+                            "Recovery result:",
+                        )
+                    )
+                ) or "Recovery policy completed without a recovery result."
+
+            if outcome == "APPROVAL_REQUIRED":
+                approval_timestamp = re.search(
+                    r"^Approval source timestamp:\s*(.+)$",
+                    output,
+                    flags=re.MULTILINE,
+                )
+                if approval_timestamp:
+                    st.session_state.pending_memory_restart_timestamp = (
+                        approval_timestamp.group(1).strip()
+                    )
+            else:
+                st.session_state.pop("pending_memory_restart_timestamp", None)
         elif success and script_job["script"] == ANOMALY_SCRIPT:
             try:
                 total, anomalies = count_anomalies()
@@ -928,12 +990,14 @@ if script_job and script_job["state"] != "running":
                 details = f"Detection completed; could not read its result summary: {count_error}"
         elif result is not None and result.returncode != 0:
             details = (
-                result.stderr.strip()
+                output
+                if script_job["script"] == SELF_HEALING_SCRIPT and output
+                else result.stderr.strip()
                 or f"Script exited with code {result.returncode}."
             )
         elif error is not None:
             details = (
-                f"Script exceeded its {35 if script_job['script'] == SELF_HEALING_SCRIPT else 45}-second timeout."
+                f"Script exceeded its 45-second timeout."
                 if isinstance(error, subprocess.TimeoutExpired)
                 else str(error)
             )
@@ -952,7 +1016,10 @@ if script_job and script_job["state"] != "running":
 
         if success:
             if script_job["script"] == SELF_HEALING_SCRIPT:
-                st.success("Self-healing successful! Flask application recovered.")
+                if details.startswith("RECOVERED:"):
+                    st.success(details)
+                else:
+                    st.info(f"Recovery policy completed:\n\n{details}")
             elif script_job["script"] == ANOMALY_SCRIPT:
                 st.success("AI anomaly detection completed successfully.")
             else:
@@ -1103,9 +1170,29 @@ if completion:
         st.dataframe([completion["incident"]], hide_index=True, width="stretch")
         if completion["report"]:
             st.metric("Incident severity", completion["report"]["severity"])
+            if completion["report"]["confidence"] is not None:
+                st.metric(
+                    "RCA evidence confidence",
+                    f"{completion['report']['confidence']}%",
+                )
+                st.caption(
+                    "Heuristic evidence score, not a calibrated probability."
+                )
+            st.markdown("**Detected symptoms**")
+            for symptom in completion["report"]["symptoms"]:
+                st.write(f"- {symptom}")
+            st.markdown("**Incident timeline**")
+            for event in completion["report"]["timeline"]:
+                st.write(f"- {event}")
+            st.markdown("**Supporting evidence**")
+            for evidence in completion["report"]["evidence"]:
+                st.write(f"- {evidence}")
             st.markdown("**Possible root cause**")
             for cause in completion["report"]["causes"]:
                 st.write(f"- {cause}")
+            st.markdown("**Confidence basis**")
+            for basis in completion["report"]["confidence_basis"]:
+                st.write(f"- {basis}")
             st.markdown("**Recommendations**")
             for recommendation in completion["report"]["recommendations"]:
                 st.write(f"- {recommendation}")
@@ -1351,7 +1438,7 @@ with flask_columns[0]:
                             recovery_status.write(
                                 "Starting the Flask self-healing process."
                             )
-                            run_project_script(SELF_HEALING_SCRIPT, timeout=35)
+                            run_project_script(SELF_HEALING_SCRIPT, timeout=45)
                             st.session_state.pop("script_completion", None)
                             recovery_status.update(
                                 label="Flask recovery is running",
@@ -1403,6 +1490,88 @@ with flask_columns[1]:
             except (OSError, RuntimeError, ValueError) as error:
                 add_history("Run AI Anomaly Detection", False, str(error))
                 st.error(f"Could not complete anomaly detection: {error}")
+
+with st.container(border=True):
+    st.subheader("🛡️ Policy-based recovery")
+    st.write(
+        "This button runs the policy once on demand; the monitor also runs it "
+        "automatically. Confirmed Flask outages are restarted, API failures get "
+        "bounded retries, and high-memory restarts require approval. CPU and disk "
+        "incidents remain diagnostic only; disk files are never deleted."
+    )
+    pending_memory_restart = st.session_state.get(
+        "pending_memory_restart_timestamp"
+    )
+    if pending_memory_restart:
+        try:
+            latest_memory_usage = float(latest_metric_row["memory_usage"])
+        except (KeyError, TypeError, ValueError):
+            latest_memory_usage = None
+        st.warning(
+            "The last policy run diagnosed high memory and withheld restart. "
+            f"Approval was requested for reading {pending_memory_restart}."
+        )
+        if (
+            latest_memory_usage is not None
+            and latest_memory_usage >= 90
+            and metrics_age_seconds is not None
+            and metrics_age_seconds <= 30
+        ):
+            st.caption(
+                f"Fresh reading still shows {latest_memory_usage:.1f}% memory. "
+                "The approval expires after 30 seconds and is revalidated by the policy."
+            )
+            if st.button(
+                "Approve high-memory Flask restart",
+                disabled=script_running,
+                width="stretch",
+            ):
+                try:
+                    run_project_script(
+                        SELF_HEALING_SCRIPT,
+                        timeout=45,
+                        arguments=[
+                            "--approve-high-memory-restart",
+                            "--approved-source-timestamp",
+                            pending_memory_restart,
+                        ],
+                    )
+                    st.session_state.pop("script_completion", None)
+                    st.session_state.pop(
+                        "pending_memory_restart_timestamp", None
+                    )
+                    add_history(
+                        "Approve high-memory Flask restart",
+                        True,
+                        "Approval submitted; policy will revalidate health and memory.",
+                    )
+                    st.info("Approved recovery is running.")
+                except (OSError, RuntimeError, ValueError) as error:
+                    add_history(
+                        "Approve high-memory Flask restart",
+                        False,
+                        str(error),
+                    )
+                    st.error(f"Could not start approved recovery: {error}")
+        else:
+            st.warning(
+                "Approval is disabled because the latest memory reading is "
+                "not fresh or is below the high-memory threshold. Run the policy again."
+            )
+
+    if st.button(
+        "Run Recovery Policy",
+        type="primary",
+        disabled=script_running,
+        width="stretch",
+    ):
+        try:
+            run_project_script(SELF_HEALING_SCRIPT, timeout=45)
+            st.session_state.pop("script_completion", None)
+            st.info("Recovery policy started; this run will report its evidence and action.")
+        except (OSError, RuntimeError, ValueError) as error:
+            add_history("Run Recovery Policy", False, str(error))
+            st.error(f"Could not start the recovery policy: {error}")
 
 with st.container(border=True):
     st.subheader("🧭 Root cause analysis")
