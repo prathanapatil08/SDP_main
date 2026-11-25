@@ -41,6 +41,9 @@ INCIDENT_FILE = BASE_DIR / "data" / "incident_reports.csv"
 SELF_HEALING_LOG = BASE_DIR / "logs" / "self_healing_log.csv"
 CPU_ALERT_THRESHOLD = 85
 MEMORY_ALERT_THRESHOLD = 90
+DASHBOARD_REFRESH_MS = 15_000
+CHART_POINT_LIMIT = 60
+STALE_READING_SECONDS = 30
 
 
 def active_test_workloads():
@@ -188,7 +191,7 @@ st.markdown(
 # --------------------------------------------------
 
 st_autorefresh(
-    interval=5000,
+    interval=DASHBOARD_REFRESH_MS,
     key="dashboard_refresh"
 )
 
@@ -214,10 +217,11 @@ with st.sidebar:
     )
     st.caption(
         "When the monitor is running, it applies safe recovery automatically; "
-        "high-memory restarts require approval."
+        "Flask health failures are restarted immediately, and sustained high "
+        "memory triggers a restart after 60 seconds. Outcomes appear below."
     )
     st.divider()
-    st.caption("Live refresh · every 5 seconds")
+    st.caption("Live refresh · every 15 seconds")
 
 
 # --------------------------------------------------
@@ -230,7 +234,7 @@ st.markdown(
         <div class="ops-eyebrow">SDP · LIVE OPERATIONS</div>
         <h1>AI Operations Center</h1>
         <p>System health, incident intelligence, dependency signals, and safe recovery.</p>
-        <p class="ops-live">● AUTO-REFRESH ON · 5-second interval</p>
+        <p class="ops-live">● AUTO-REFRESH ON · 15-second interval</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -384,7 +388,7 @@ else:
         0,
         (pd.Timestamp.now() - parsed_timestamp).total_seconds(),
     )
-    if reading_age_seconds > 15:
+    if reading_age_seconds > STALE_READING_SECONDS:
         st.warning(
             f"Monitoring data is stale: latest reading is "
             f"{reading_age_seconds:.0f} seconds old."
@@ -415,7 +419,10 @@ elif (
     or (pd.notna(response_time) and response_time > 1000)
     or (pd.notna(api_error_rate) and api_error_rate > 5)
     or current_ai_status == "Anomaly"
-    or (reading_age_seconds is not None and reading_age_seconds > 15)
+    or (
+        reading_age_seconds is not None
+        and reading_age_seconds > STALE_READING_SECONDS
+    )
 ):
     overall_health = "Degraded"
 else:
@@ -567,7 +574,7 @@ st.divider()
 st.subheader("📈 System Performance")
 
 left, right = st.columns(2)
-chart_metrics = metrics.tail(120).set_index("timestamp")
+chart_metrics = metrics.tail(CHART_POINT_LIMIT).set_index("timestamp")
 
 with left:
     st.write("CPU Usage Over Time")
@@ -606,8 +613,7 @@ for start in range(0, len(available_extended_charts), 2):
         with chart_column:
             st.write(title)
             st.line_chart(
-                metrics.tail(120)
-                .set_index("timestamp")[visible_columns]
+                chart_metrics[visible_columns]
             )
 
 
@@ -688,11 +694,13 @@ if not anomalies.empty and "status" in anomalies.columns:
         if not model_history.empty:
             timeline_columns = st.columns(2)
             anomaly_timeline = (
-                model_history.tail(120)
+                model_history.tail(CHART_POINT_LIMIT)
                 .set_index("parsed_timestamp")[["is_anomaly"]]
             )
             with timeline_columns[0]:
-                st.markdown("**Anomaly timeline · latest 120 predictions**")
+                st.markdown(
+                    f"**Anomaly timeline · latest {CHART_POINT_LIMIT} predictions**"
+                )
                 st.area_chart(anomaly_timeline)
 
             if "anomaly_score" in model_history.columns:
@@ -702,7 +710,7 @@ if not anomalies.empty and "status" in anomalies.columns:
                 with timeline_columns[1]:
                     st.markdown("**Isolation Forest score trend**")
                     st.line_chart(
-                        model_history.tail(120)
+                        model_history.tail(CHART_POINT_LIMIT)
                         .set_index("parsed_timestamp")[["anomaly_score"]]
                     )
 
@@ -733,7 +741,7 @@ st.subheader("🔍 Root Cause Analysis")
 
 st.caption(
     "Live analysis uses the latest monitoring reading and active CPU/memory "
-    "test workers; this section refreshes every 5 seconds."
+    "test workers; this section refreshes every 15 seconds."
 )
 st.caption(f"Incident source reading: {latest_timestamp}")
 
@@ -1232,6 +1240,67 @@ if SELF_HEALING_LOG.exists():
             )
             h4.metric("Escalations", int(escalations))
 
+            latest_activity = healing_logs.iloc[-1]
+            latest_result_value = latest_activity.get("result", "")
+            latest_result = (
+                str(latest_result_value).strip()
+                if pd.notna(latest_result_value)
+                else ""
+            )
+            latest_action_value = latest_activity.get("action", "")
+            latest_action = (
+                str(latest_action_value).strip()
+                if pd.notna(latest_action_value)
+                else ""
+            )
+            latest_time_value = latest_activity.get("timestamp", "")
+            latest_time = (
+                str(latest_time_value).strip()
+                if pd.notna(latest_time_value)
+                else ""
+            )
+            latest_verification_value = latest_activity.get("verification", "")
+            latest_verification = (
+                str(latest_verification_value).strip()
+                if pd.notna(latest_verification_value)
+                else ""
+            )
+            latest_escalation_value = latest_activity.get("escalation", "")
+            latest_escalation = (
+                str(latest_escalation_value).strip()
+                if pd.notna(latest_escalation_value)
+                else ""
+            )
+            latest_summary = " · ".join(
+                value for value in (latest_time, latest_action) if value
+            )
+            if latest_result.casefold() == "recovery successful":
+                st.success(
+                    f"Latest activity: Recovery successful"
+                    f"{f' · {latest_summary}' if latest_summary else ''}"
+                    f"{f' · {latest_verification}' if latest_verification else ''}"
+                )
+            elif (
+                latest_result.casefold() in {"recovery failed", "policy failed"}
+                or latest_escalation
+            ):
+                st.error(
+                    f"Latest activity: Recovery failed or escalated"
+                    f"{f' · {latest_summary}' if latest_summary else ''}"
+                    f"{f' · {latest_escalation}' if latest_escalation else ''}"
+                )
+            elif latest_result.casefold() == "approval required":
+                st.warning(
+                    f"Latest activity: Recovery requires approval"
+                    f"{f' · {latest_summary}' if latest_summary else ''}"
+                    f"{f' · {latest_verification}' if latest_verification else ''}"
+                )
+            else:
+                st.info(
+                    f"Latest activity: {latest_result or 'Unknown'}"
+                    f"{f' · {latest_summary}' if latest_summary else ''}"
+                )
+
             st.markdown("### Recent Self-Healing Activities")
 
             st.dataframe(
@@ -1273,7 +1342,7 @@ st.divider()
 st.subheader("⚙️ Dashboard Information")
 
 st.write("Monitoring interval: 5 seconds")
-st.write("Dashboard refresh interval: 5 seconds")
+st.write("Dashboard refresh interval: 15 seconds")
 st.write("AI algorithm: Isolation Forest")
 st.write(
     "AI features: CPU, memory, disk, network rates, response time, API error "
@@ -1283,7 +1352,8 @@ st.write("Data source: metrics.csv")
 st.write("AI output: anomaly_results.csv")
 st.write("AI detection and Root Cause Analysis: Run from the Testing Control Panel")
 st.write(
-    "Self-healing: Runs from the monitor; high-memory restarts require approval"
+    "Self-healing: Runs from the monitor; Flask restarts after 60 seconds of "
+    "sustained high memory. Latest outcome and verification appear above."
 )
 
 st.caption(

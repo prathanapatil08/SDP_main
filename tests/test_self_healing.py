@@ -98,6 +98,33 @@ class RecoveryPolicyTests(unittest.TestCase):
         restart_flask.assert_called_once()
         write_log.assert_called_once()
 
+    def test_automatic_high_memory_restart_reports_verified_success(self):
+        metrics = dict(self.metrics, memory_usage="92")
+        output = io.StringIO()
+        with (
+            patch.object(self_healing, "read_latest_metrics", return_value=(metrics, set())),
+            patch.object(self_healing, "read_matching_incident", return_value=None),
+            patch.object(self_healing, "metrics_age_seconds", return_value=0),
+            patch.object(self_healing, "retry_check", side_effect=[True, True]),
+            patch.object(self_healing, "top_memory_consumers", return_value=[]),
+            patch.object(self_healing, "restart_flask") as restart_flask,
+            patch.object(self_healing, "write_log") as write_log,
+            patch.object(self_healing.psutil, "virtual_memory") as virtual_memory,
+            contextlib.redirect_stdout(output),
+        ):
+            virtual_memory.return_value.percent = 92
+            result = self_healing.run_policy(automatic_high_memory_restart=True)
+
+        self.assertTrue(result)
+        self.assertIn("Recovery result: RECOVERED", output.getvalue())
+        self.assertIn("automatic high-memory restart", output.getvalue())
+        restart_flask.assert_called_once()
+        self.assertEqual(write_log.call_args.args[4], "Recovery successful")
+        self.assertEqual(
+            write_log.call_args.args[3],
+            "Restart Flask after sustained high memory",
+        )
+
     @patch.object(self_healing, "write_log")
     @patch.object(self_healing, "restart_flask")
     @patch.object(self_healing, "retry_check", return_value=True)
@@ -225,7 +252,7 @@ class AutomaticRecoveryTests(unittest.TestCase):
 
     @patch.object(self_healing, "run_policy_safely", return_value=True)
     def test_threshold_signal_is_rate_limited_across_calls(self, run_policy):
-        metrics = dict(self.metrics, memory_usage="92.3")
+        metrics = dict(self.metrics, cpu_usage="92.3")
         with patch.object(self_healing, "AUTOMATIC_RECOVERY_LOCK_FILE", self.lock_file):
             first_result = self_healing.run_automatic_policy_if_needed(
                 "Healthy",
@@ -243,12 +270,73 @@ class AutomaticRecoveryTests(unittest.TestCase):
         run_policy.assert_called_once_with()
 
     @patch.object(self_healing, "run_policy_safely", return_value=True)
-    def test_cleared_signal_allows_a_new_incident_immediately(self, run_policy):
-        high_memory_metrics = dict(self.metrics, memory_usage="92.3")
+    def test_high_memory_restart_waits_for_sustained_threshold(self, run_policy):
+        metrics = dict(self.metrics, memory_usage="92.3")
+        with patch.object(self_healing, "AUTOMATIC_RECOVERY_LOCK_FILE", self.lock_file):
+            first_result = self_healing.run_automatic_policy_if_needed(
+                "Healthy",
+                metrics,
+                now=100,
+            )
+            before_threshold = self_healing.run_automatic_policy_if_needed(
+                "Healthy",
+                metrics,
+                now=159,
+            )
+            after_threshold = self_healing.run_automatic_policy_if_needed(
+                "Healthy",
+                metrics,
+                now=160,
+            )
+
+        self.assertIsNone(first_result)
+        self.assertIsNone(before_threshold)
+        self.assertTrue(after_threshold)
+        run_policy.assert_called_once_with(automatic_high_memory_restart=True)
+
+    @patch.object(self_healing, "run_policy_safely", side_effect=[False, True])
+    def test_failed_high_memory_restart_retries_after_cooldown(self, run_policy):
+        metrics = dict(self.metrics, memory_usage="92.3")
         with patch.object(self_healing, "AUTOMATIC_RECOVERY_LOCK_FILE", self.lock_file):
             self_healing.run_automatic_policy_if_needed(
                 "Healthy",
-                high_memory_metrics,
+                metrics,
+                now=100,
+            )
+            failed_attempt = self_healing.run_automatic_policy_if_needed(
+                "Healthy",
+                metrics,
+                now=160,
+            )
+            before_cooldown = self_healing.run_automatic_policy_if_needed(
+                "Healthy",
+                metrics,
+                now=219,
+            )
+            retry = self_healing.run_automatic_policy_if_needed(
+                "Healthy",
+                metrics,
+                now=220,
+            )
+
+        self.assertFalse(failed_attempt)
+        self.assertIsNone(before_cooldown)
+        self.assertTrue(retry)
+        self.assertEqual(
+            run_policy.call_args_list,
+            [
+                call(automatic_high_memory_restart=True),
+                call(automatic_high_memory_restart=True),
+            ],
+        )
+
+    @patch.object(self_healing, "run_policy_safely", return_value=True)
+    def test_cleared_signal_allows_a_new_incident_immediately(self, run_policy):
+        high_cpu_metrics = dict(self.metrics, cpu_usage="92.3")
+        with patch.object(self_healing, "AUTOMATIC_RECOVERY_LOCK_FILE", self.lock_file):
+            self_healing.run_automatic_policy_if_needed(
+                "Healthy",
+                high_cpu_metrics,
                 now=100,
             )
             cleared_result = self_healing.run_automatic_policy_if_needed(
@@ -258,13 +346,42 @@ class AutomaticRecoveryTests(unittest.TestCase):
             )
             new_incident_result = self_healing.run_automatic_policy_if_needed(
                 "Healthy",
-                high_memory_metrics,
+                high_cpu_metrics,
                 now=102,
             )
 
         self.assertIsNone(cleared_result)
         self.assertTrue(new_incident_result)
         self.assertEqual(run_policy.call_count, 2)
+
+    @patch.object(self_healing, "run_policy_safely", return_value=True)
+    def test_clearing_high_memory_restarts_its_sustain_timer(self, run_policy):
+        high_memory_metrics = dict(self.metrics, memory_usage="92.3")
+        with patch.object(self_healing, "AUTOMATIC_RECOVERY_LOCK_FILE", self.lock_file):
+            self_healing.run_automatic_policy_if_needed(
+                "Healthy",
+                high_memory_metrics,
+                now=100,
+            )
+            self_healing.run_automatic_policy_if_needed(
+                "Healthy",
+                self.metrics,
+                now=110,
+            )
+            before_threshold = self_healing.run_automatic_policy_if_needed(
+                "Healthy",
+                high_memory_metrics,
+                now=169,
+            )
+            after_threshold = self_healing.run_automatic_policy_if_needed(
+                "Healthy",
+                high_memory_metrics,
+                now=229,
+            )
+
+        self.assertIsNone(before_threshold)
+        self.assertTrue(after_threshold)
+        run_policy.assert_called_once_with(automatic_high_memory_restart=True)
 
 
 if __name__ == "__main__":

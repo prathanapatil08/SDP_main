@@ -122,6 +122,7 @@ print("Press CTRL + C to stop monitoring.\n")
 previous_network = psutil.net_io_counters()
 previous_sample_time = time.monotonic()
 previous_api_metrics = None
+psutil.cpu_percent(interval=None)
 
 try:
 
@@ -129,7 +130,7 @@ try:
         cycle_started = time.monotonic()
 
         # Collect CPU usage
-        cpu = psutil.cpu_percent(interval=1)
+        cpu = psutil.cpu_percent(interval=None)
 
         # Collect memory information
         memory = psutil.virtual_memory()

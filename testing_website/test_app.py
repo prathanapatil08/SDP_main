@@ -15,7 +15,13 @@ from streamlit_autorefresh import st_autorefresh
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-FLASK_SCRIPT = BASE_DIR / "app" / "main.py"
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
+
+from app import self_healing
+from app.process_control import stop_project_flask
+
+
 SELF_HEALING_SCRIPT = BASE_DIR / "app" / "self_healing.py"
 ANOMALY_SCRIPT = BASE_DIR / "ml" / "detect_anomalies.py"
 ROOT_CAUSE_SCRIPT = BASE_DIR / "ml" / "root_cause.py"
@@ -26,11 +32,13 @@ MONITOR_LOCK_FILE = BASE_DIR / "logs" / "monitor-start.lock"
 ANOMALY_FILE = BASE_DIR / "data" / "anomaly_results.csv"
 FLASK_URL = "http://127.0.0.1:5000/health"
 MAX_LOAD_SECONDS = 30
+WORKER_STARTUP_TIMEOUT_SECONDS = 5
 MAX_MEMORY_LOAD_MB = 64
 DEFAULT_MEMORY_LOAD_MB = 32
 MIN_AVAILABLE_MEMORY_MIB = 512
 MIN_AI_MEMORY_MIB = 512
 MIN_RCA_MEMORY_MIB = 256
+MEMORY_ALERT_THRESHOLD = 90
 WORKER_READY_MARKER = "AIOPS_WORKLOAD_READY"
 _monitor_start_lock = threading.Lock()
 
@@ -385,10 +393,11 @@ class LoadManager:
                     daemon=True,
                 )
                 output_reader.start()
-                if not ready_event.wait(timeout=1):
+                if not ready_event.wait(timeout=WORKER_STARTUP_TIMEOUT_SECONDS):
                     error_detail = "\n".join(output_lines).strip()
                     reason = (
-                        f"{kind.title()} worker did not report readiness within 1 second."
+                        f"{kind.title()} worker did not report readiness within "
+                        f"{WORKER_STARTUP_TIMEOUT_SECONDS} seconds."
                     )
                     if process.poll() is not None:
                         reason = (
@@ -607,95 +616,13 @@ def flask_is_healthy():
         return False
 
 
-def _is_project_flask_process(process):
-    try:
-        command_line = process.cmdline()
-        working_directory = Path(process.cwd())
-    except psutil.NoSuchProcess:
-        return False
-    except psutil.AccessDenied as error:
-        raise RuntimeError(
-            f"Cannot safely inspect process {process.pid}; access was denied."
-        ) from error
-
-    for argument in command_line:
-        candidate = Path(argument)
-        if candidate.name.lower() != FLASK_SCRIPT.name.lower():
-            continue
-        if not candidate.is_absolute():
-            candidate = working_directory / candidate
-        try:
-            if candidate.resolve() == FLASK_SCRIPT.resolve():
-                return True
-        except OSError:
-            continue
-    return False
-
-
-def stop_project_flask():
-    try:
-        connections = psutil.net_connections(kind="inet")
-    except psutil.AccessDenied as error:
-        raise RuntimeError(
-            "Windows denied access to the port-5000 process list; Flask was not stopped."
-        ) from error
-
-    listener_pids = {
-        connection.pid
-        for connection in connections
-        if connection.laddr
-        and connection.laddr.port == 5000
-        and connection.status == psutil.CONN_LISTEN
-    }
-    if not listener_pids:
-        return False
-
-    project_processes = []
-    for pid in listener_pids:
-        if pid is None:
-            raise RuntimeError(
-                "A port-5000 listener has no visible process ID; refusing to stop an unidentified process."
-            )
-        try:
-            process = psutil.Process(pid)
-            if _is_project_flask_process(process):
-                project_processes.append(process)
-        except psutil.NoSuchProcess:
-            continue
-
-    if not project_processes:
-        raise RuntimeError(
-            "Port 5000 is in use, but its listener is not this project's app/main.py. "
-            "For safety, it was left running."
-        )
-
-    for process in project_processes:
-        try:
-            process.terminate()
-        except psutil.NoSuchProcess:
-            continue
-        except psutil.AccessDenied as error:
-            raise RuntimeError(
-                f"Windows denied permission to stop project Flask process {process.pid}."
-            ) from error
-
-    _, alive = psutil.wait_procs(project_processes, timeout=5)
-    for process in alive:
-        try:
-            process.kill()
-        except psutil.NoSuchProcess:
-            continue
-        except psutil.AccessDenied as error:
-            raise RuntimeError(
-                f"Windows denied permission to finish stopping Flask process {process.pid}."
-            ) from error
-
-    if alive:
-        _, still_alive = psutil.wait_procs(alive, timeout=5)
-        if still_alive:
-            raise RuntimeError("The project Flask process did not stop after termination.")
-
-    return True
+def wait_for_flask_to_stop(timeout=5):
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if not flask_is_healthy():
+            return True
+        time.sleep(0.2)
+    return not flask_is_healthy()
 
 
 def run_project_script(script, timeout=45, arguments=None):
@@ -760,17 +687,33 @@ def parse_rca_output(output):
     }
 
 
-def add_history(action, success, details):
-    st.session_state.history.insert(
-        0,
-        {
-            "time": time.strftime("%Y-%m-%d %H:%M:%S"),
-            "action": action,
-            "result": "Success" if success else "Failed",
-            "details": details,
-        },
-    )
+def add_history(action, success, details, result=None):
+    entry = {
+        "time": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "action": action,
+        "result": result or ("Success" if success else "Failed"),
+        "details": details,
+    }
+    st.session_state.history.insert(0, entry)
     del st.session_state.history[100:]
+    return entry
+
+
+def log_workload_activity(action, result, details):
+    try:
+        self_healing.write_log(
+            "Manual diagnostic workload",
+            "Operator-initiated workload test",
+            "Diagnostic workload only; recovery actions are recorded separately.",
+            action,
+            result,
+            details,
+        )
+    except (OSError, csv.Error) as error:
+        st.warning(
+            "The workload result is available in Execution History, but could not "
+            f"be added to Self-Healing Activity History: {error}"
+        )
 
 
 def render_workload_diagnostics(manager, kind):
@@ -800,7 +743,7 @@ def render_workload_diagnostics(manager, kind):
     else:
         memory_usage = diagnostics["memory_rss_mib"]
         st.caption(
-            f"Memory allocation confirmed by worker: "
+            f"Requested memory allocation: "
             f"{diagnostics['memory_allocated_mb']} MB · resident usage: "
             f"{f'{memory_usage:.1f} MiB' if memory_usage is not None else 'unavailable'}"
         )
@@ -911,11 +854,20 @@ st.session_state.setdefault("rca_status", "Not run")
 
 for kind in manager.consume_auto_stops():
     workload_name = "CPU" if kind == "cpu" else "Memory"
+    stop_details = (
+        f"{workload_name} workload stopped automatically after its selected duration."
+    )
     add_history(
         f"{kind.upper()} workload stopped",
         True,
-        f"{workload_name} workload stopped automatically after its selected duration.",
+        stop_details,
     )
+    if kind == "memory":
+        log_workload_activity(
+            "Memory workload stopped automatically",
+            "Workload stopped",
+            stop_details,
+        )
     st.success(f"{workload_name} load stopped successfully!")
 
 if script_job and script_job["state"] != "running":
@@ -938,6 +890,7 @@ if script_job and script_job["state"] != "running":
         action = action_names[script_job["script"]]
         success = error is None and result is not None and result.returncode == 0
         details = ""
+        history_result = None
         if success and script_job["script"] == SELF_HEALING_SCRIPT:
             recovery_result = re.search(
                 r"^Recovery result:\s*(.+)$",
@@ -947,41 +900,88 @@ if script_job and script_job["state"] != "running":
             outcome = recovery_result.group(1).strip() if recovery_result else ""
             if outcome == "RECOVERED":
                 success = flask_is_healthy()
+                history_result = (
+                    "Recovery successful" if success else "Recovery failed"
+                )
                 details = (
                     "RECOVERED: Flask health check passed."
                     if success
                     else "Recovery script returned success, but Flask health check failed."
                 )
-            else:
+            elif outcome == "RETRIED":
+                history_result = "Recovery successful"
                 details = "\n".join(
                     line
                     for line in output.splitlines()
                     if line.startswith(
                         (
-                            "Incident:",
-                            "Probable cause:",
                             "Policy decision:",
                             "Verification:",
-                            "Escalation:",
+                            "Recovery result:",
+                        )
+                    )
+                )
+            elif outcome == "APPROVAL_REQUIRED":
+                history_result = "Approval required"
+                details = "\n".join(
+                    line
+                    for line in output.splitlines()
+                    if line.startswith(
+                        (
+                            "Policy decision:",
+                            "Verification:",
                             "Approval source timestamp:",
                             "Top memory consumers:",
                             "Recovery result:",
                         )
                     )
-                ) or "Recovery policy completed without a recovery result."
-
-            if outcome == "APPROVAL_REQUIRED":
-                approval_timestamp = re.search(
-                    r"^Approval source timestamp:\s*(.+)$",
-                    output,
-                    flags=re.MULTILINE,
                 )
-                if approval_timestamp:
-                    st.session_state.pending_memory_restart_timestamp = (
-                        approval_timestamp.group(1).strip()
+            elif outcome == "NO_ACTION":
+                history_result = "No action"
+                details = "\n".join(
+                    line
+                    for line in output.splitlines()
+                    if line.startswith(
+                        (
+                            "Policy decision:",
+                            "Verification:",
+                            "Recovery result:",
+                        )
                     )
+                )
+            elif outcome == "DIAGNOSED":
+                history_result = "Diagnosed"
+                details = "\n".join(
+                    line
+                    for line in output.splitlines()
+                    if line.startswith(
+                        (
+                            "Policy decision:",
+                            "Verification:",
+                            "Recovery result:",
+                        )
+                    )
+                )
+            elif outcome == "ESCALATED":
+                success = False
+                history_result = "Recovery failed"
+                details = "\n".join(
+                    line
+                    for line in output.splitlines()
+                    if line.startswith(
+                        (
+                            "Policy decision:",
+                            "Verification:",
+                            "Escalation:",
+                            "Recovery result:",
+                        )
+                    )
+                )
             else:
-                st.session_state.pop("pending_memory_restart_timestamp", None)
+                success = False
+                history_result = "Recovery unverified"
+                details = "The recovery policy did not report a recognized outcome."
+
         elif success and script_job["script"] == ANOMALY_SCRIPT:
             try:
                 total, anomalies = count_anomalies()
@@ -989,6 +989,8 @@ if script_job and script_job["state"] != "running":
             except (OSError, csv.Error, RuntimeError) as count_error:
                 details = f"Detection completed; could not read its result summary: {count_error}"
         elif result is not None and result.returncode != 0:
+            if script_job["script"] == SELF_HEALING_SCRIPT:
+                history_result = "Recovery failed"
             details = (
                 output
                 if script_job["script"] == SELF_HEALING_SCRIPT and output
@@ -1009,6 +1011,13 @@ if script_job and script_job["state"] != "running":
                     if part
                 ).strip()
 
+        if (
+            script_job["script"] == SELF_HEALING_SCRIPT
+            and not success
+            and history_result is None
+        ):
+            history_result = "Recovery failed"
+
         if script_job["script"] == ANOMALY_SCRIPT:
             st.session_state.ai_status = "Completed" if success else "Failed"
         elif script_job["script"] == ROOT_CAUSE_SCRIPT:
@@ -1016,19 +1025,26 @@ if script_job and script_job["state"] != "running":
 
         if success:
             if script_job["script"] == SELF_HEALING_SCRIPT:
-                if details.startswith("RECOVERED:"):
+                if history_result == "Recovery successful":
                     st.success(details)
+                elif history_result == "Approval required":
+                    st.warning(details)
                 else:
                     st.info(f"Recovery policy completed:\n\n{details}")
             elif script_job["script"] == ANOMALY_SCRIPT:
                 st.success("AI anomaly detection completed successfully.")
             else:
                 st.success("Root cause analysis completed successfully.")
-            add_history(action, True, details or "Completed successfully.")
+            add_history(
+                action,
+                True,
+                details or "Completed successfully.",
+                result=history_result,
+            )
         else:
             failure = details or "Script failed."
             st.error(f"{action} failed: {failure}")
-            add_history(action, False, failure)
+            add_history(action, False, failure, result=history_result)
         incident = None
         if script_job["script"] == ROOT_CAUSE_SCRIPT:
             try:
@@ -1323,6 +1339,10 @@ with load_columns[1]:
             key="memory_duration",
         )
         st.caption("Automatically releases memory after the selected duration; only one load test can run at a time.")
+        st.caption(
+            "Start/stop outcomes are also recorded in the dashboard's "
+            "Self-Healing Activity History as diagnostic activities."
+        )
         if st.button(
             "Start Memory Load",
             type="primary",
@@ -1363,6 +1383,12 @@ with load_columns[1]:
                     True,
                     f"Allocated and touched {memory_size_mb} MB for up to {memory_duration} seconds.",
                 )
+                log_workload_activity(
+                    "Memory workload started",
+                    "Workload started",
+                    f"Worker confirmed and touched {memory_size_mb} MB; "
+                    f"maximum duration {memory_duration} seconds.",
+                )
                 st.toast(
                     f"Memory load started successfully! Allocated {memory_size_mb} MB.",
                     icon="✅",
@@ -1370,6 +1396,11 @@ with load_columns[1]:
                 st.success(f"Memory load started successfully! Allocated {memory_size_mb} MB.")
             except (OSError, RuntimeError, ValueError, psutil.Error) as error:
                 add_history("Start Memory Load", False, str(error))
+                log_workload_activity(
+                    "Memory workload start failed",
+                    "Workload failed",
+                    str(error),
+                )
                 st.toast(f"Could not start memory workload: {error}", icon="❌")
                 st.error(f"Could not start memory workload: {error}")
         if st.button(
@@ -1394,9 +1425,19 @@ with load_columns[1]:
                         f"{after_usage['memory_usage']:.1f}%",
                     )
                 add_history("Stop Memory Load", stopped, details)
+                log_workload_activity(
+                    "Memory workload stopped",
+                    "Workload stopped" if stopped else "No workload active",
+                    details,
+                )
                 (st.success if stopped else st.info)(details)
             except (OSError, subprocess.TimeoutExpired) as error:
                 add_history("Stop Memory Load", False, str(error))
+                log_workload_activity(
+                    "Memory workload stop failed",
+                    "Workload failed",
+                    str(error),
+                )
                 st.error(f"Could not stop memory workload: {error}")
         render_workload_diagnostics(manager, "memory")
 
@@ -1410,23 +1451,27 @@ with flask_columns[0]:
             "Stop Flask Application",
             width="stretch",
         ):
+            history_entry = add_history(
+                "Stop Flask Application",
+                False,
+                "Stop request in progress.",
+            )
+            history_entry["result"] = "In Progress"
             try:
                 stopped_process = stop_project_flask()
-                is_stopped = not flask_is_healthy()
+                is_stopped = stopped_process or wait_for_flask_to_stop(timeout=5)
                 if is_stopped:
                     flask_status.metric("Flask · port 5000", "Stopped")
                     if stopped_process:
-                        add_history(
-                            "Stop Flask Application",
-                            True,
-                            "Flask application stopped successfully!",
+                        history_entry.update(
+                            result="Success",
+                            details="Flask application stopped successfully!",
                         )
                         st.success("Flask application stopped successfully!")
                     else:
-                        add_history(
-                            "Stop Flask Application",
-                            True,
-                            "Flask application was already stopped.",
+                        history_entry.update(
+                            result="Success",
+                            details="Flask application was already stopped.",
                         )
                         st.info("Flask application is already stopped.")
 
@@ -1457,10 +1502,14 @@ with flask_columns[0]:
                         )
                         st.error(f"Could not start automatic Flask recovery: {error}")
                 else:
-                    add_history("Stop Flask Application", False, "Flask still responds after stop request.")
+                    history_entry["result"] = "Failed"
+                    history_entry["details"] = (
+                        "Flask still responds after the stop request."
+                    )
                     st.error("Flask still responds after the stop request.")
             except (OSError, RuntimeError) as error:
-                add_history("Stop Flask Application", False, str(error))
+                history_entry["result"] = "Failed"
+                history_entry["details"] = str(error)
                 st.error(f"Could not safely stop Flask: {error}")
 
 with flask_columns[1]:
@@ -1495,70 +1544,11 @@ with st.container(border=True):
     st.subheader("🛡️ Policy-based recovery")
     st.write(
         "This button runs the policy once on demand; the monitor also runs it "
-        "automatically. Confirmed Flask outages are restarted, API failures get "
-        "bounded retries, and high-memory restarts require approval. CPU and disk "
+        "automatically. Confirmed Flask outages are restarted immediately; "
+        "sustained high memory triggers an automatic restart after 60 seconds. "
+        "On-demand high-memory restarts still require approval. CPU and disk "
         "incidents remain diagnostic only; disk files are never deleted."
     )
-    pending_memory_restart = st.session_state.get(
-        "pending_memory_restart_timestamp"
-    )
-    if pending_memory_restart:
-        try:
-            latest_memory_usage = float(latest_metric_row["memory_usage"])
-        except (KeyError, TypeError, ValueError):
-            latest_memory_usage = None
-        st.warning(
-            "The last policy run diagnosed high memory and withheld restart. "
-            f"Approval was requested for reading {pending_memory_restart}."
-        )
-        if (
-            latest_memory_usage is not None
-            and latest_memory_usage >= 90
-            and metrics_age_seconds is not None
-            and metrics_age_seconds <= 30
-        ):
-            st.caption(
-                f"Fresh reading still shows {latest_memory_usage:.1f}% memory. "
-                "The approval expires after 30 seconds and is revalidated by the policy."
-            )
-            if st.button(
-                "Approve high-memory Flask restart",
-                disabled=script_running,
-                width="stretch",
-            ):
-                try:
-                    run_project_script(
-                        SELF_HEALING_SCRIPT,
-                        timeout=45,
-                        arguments=[
-                            "--approve-high-memory-restart",
-                            "--approved-source-timestamp",
-                            pending_memory_restart,
-                        ],
-                    )
-                    st.session_state.pop("script_completion", None)
-                    st.session_state.pop(
-                        "pending_memory_restart_timestamp", None
-                    )
-                    add_history(
-                        "Approve high-memory Flask restart",
-                        True,
-                        "Approval submitted; policy will revalidate health and memory.",
-                    )
-                    st.info("Approved recovery is running.")
-                except (OSError, RuntimeError, ValueError) as error:
-                    add_history(
-                        "Approve high-memory Flask restart",
-                        False,
-                        str(error),
-                    )
-                    st.error(f"Could not start approved recovery: {error}")
-        else:
-            st.warning(
-                "Approval is disabled because the latest memory reading is "
-                "not fresh or is below the high-memory threshold. Run the policy again."
-            )
-
     if st.button(
         "Run Recovery Policy",
         type="primary",
@@ -1658,3 +1648,76 @@ if st.session_state.history:
     )
 else:
     st.info("Actions performed in this browser session will appear here.")
+
+st.divider()
+with st.container(border=True):
+    st.subheader("Approve high-memory Flask recovery")
+    st.caption(
+        "Approval applies only to the current reading. Flask health and memory "
+        "are rechecked before a restart; restarting Flask may interrupt API requests."
+    )
+    try:
+        latest_memory_usage = float(latest_metric_row["memory_usage"])
+    except (KeyError, TypeError, ValueError):
+        latest_memory_usage = None
+    approval_source_timestamp = (
+        latest_metric_row.get("timestamp") if latest_metric_row else None
+    )
+    approval_available = (
+        latest_memory_usage is not None
+        and latest_memory_usage >= MEMORY_ALERT_THRESHOLD
+        and metrics_age_seconds is not None
+        and metrics_age_seconds <= 30
+        and flask_healthy
+        and bool(approval_source_timestamp)
+    )
+
+    if approval_available:
+        st.warning(
+            f"Current memory is {latest_memory_usage:.1f}% and Flask is healthy. "
+            "The policy will revalidate both before acting."
+        )
+    else:
+        st.info(
+            "Approval is available only when fresh metrics show memory "
+            f"at or above {MEMORY_ALERT_THRESHOLD}% and Flask is healthy."
+        )
+
+    approval_confirmed = st.checkbox(
+        "I approve restarting Flask for this high-memory reading.",
+        key="high_memory_restart_approval_confirmed",
+    )
+    if st.button(
+        "Approve high-memory Flask restart",
+        disabled=(
+            not approval_available
+            or not approval_confirmed
+            or script_running
+        ),
+        width="stretch",
+    ):
+        try:
+            run_project_script(
+                SELF_HEALING_SCRIPT,
+                timeout=45,
+                arguments=[
+                    "--approve-high-memory-restart",
+                    "--approved-source-timestamp",
+                    approval_source_timestamp,
+                ],
+            )
+            st.session_state.pop("script_completion", None)
+            st.session_state.high_memory_restart_approval_confirmed = False
+            add_history(
+                "Approve high-memory Flask restart",
+                True,
+                "Approval submitted; policy will revalidate health and memory.",
+            )
+            st.info("Approved recovery is running.")
+        except (OSError, RuntimeError, ValueError) as error:
+            add_history(
+                "Approve high-memory Flask restart",
+                False,
+                str(error),
+            )
+            st.error(f"Could not start approved recovery: {error}")

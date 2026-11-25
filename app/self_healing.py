@@ -1,6 +1,7 @@
 import argparse
 import csv
 import errno
+import json
 import msvcrt
 import os
 import subprocess
@@ -19,6 +20,7 @@ if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
 from app import incident_management
+from app.process_control import project_flask_processes, stop_project_flask
 
 MAIN_FILE = BASE_DIR / "app" / "main.py"
 METRICS_FILE = BASE_DIR / "data" / "metrics.csv"
@@ -37,6 +39,7 @@ METRICS_MAX_AGE_SECONDS = 30
 HIGH_MEMORY_APPROVAL_MAX_AGE_SECONDS = 30
 FLASK_START_TIMEOUT_SECONDS = 10
 AUTOMATIC_RECOVERY_COOLDOWN_SECONDS = 60
+AUTOMATIC_HIGH_MEMORY_RESTART_SECONDS = 60
 
 LOG_COLUMNS = [
     "timestamp",
@@ -160,28 +163,103 @@ def run_automatic_policy_if_needed(app_status, metrics, now=None):
             raise
 
         try:
-            if not automatic_recovery_signal_active(app_status, metrics):
+            lock_file.seek(1)
+            saved_state = lock_file.read().decode("ascii").strip()
+            state = {}
+            if saved_state:
+                try:
+                    loaded_state = json.loads(saved_state)
+                except json.JSONDecodeError:
+                    try:
+                        state["last_attempt"] = float(saved_state)
+                    except ValueError as error:
+                        raise RuntimeError(
+                            "Automatic recovery cooldown state is invalid."
+                        ) from error
+                else:
+                    if isinstance(loaded_state, dict):
+                        state = loaded_state
+                    elif isinstance(loaded_state, (int, float)) and not isinstance(
+                        loaded_state, bool
+                    ):
+                        state["last_attempt"] = float(loaded_state)
+                    else:
+                        raise RuntimeError(
+                            "Automatic recovery cooldown state is invalid."
+                        )
+                if not isinstance(state, dict):
+                    raise RuntimeError(
+                        "Automatic recovery cooldown state is invalid."
+                    )
+
+            def save_state():
                 lock_file.seek(1)
                 lock_file.truncate(1)
+                if state:
+                    lock_file.write(
+                        json.dumps(state, separators=(",", ":")).encode("ascii")
+                    )
                 lock_file.flush()
+
+            if not automatic_recovery_signal_active(app_status, metrics):
+                state.clear()
+                save_state()
                 return None
 
-            lock_file.seek(1)
-            saved_attempt = lock_file.read().decode("ascii").strip()
-            if saved_attempt:
+            memory = numeric_value(metrics, "memory_usage")
+            sustained_memory_signal = (
+                app_status == "Healthy"
+                and memory is not None
+                and memory >= MEMORY_ALERT_THRESHOLD
+            )
+            if sustained_memory_signal:
+                try:
+                    memory_high_since = float(state["memory_high_since"])
+                except KeyError:
+                    memory_high_since = current_time
+                except (TypeError, ValueError) as error:
+                    raise RuntimeError(
+                        "Automatic high-memory recovery state is invalid."
+                    ) from error
+                if current_time < memory_high_since:
+                    memory_high_since = current_time
+                state["memory_high_since"] = memory_high_since
+
+                if state.get("memory_restart_attempted"):
+                    save_state()
+                    return None
+                if (
+                    current_time - memory_high_since
+                    < AUTOMATIC_HIGH_MEMORY_RESTART_SECONDS
+                ):
+                    save_state()
+                    return None
+            else:
+                state.pop("memory_high_since", None)
+                state.pop("memory_restart_attempted", None)
+
+            saved_attempt = state.get("last_attempt")
+            if saved_attempt is not None:
                 try:
                     elapsed = current_time - float(saved_attempt)
-                except ValueError as error:
+                except (TypeError, ValueError) as error:
                     raise RuntimeError(
                         "Automatic recovery cooldown state is invalid."
                     ) from error
                 if 0 <= elapsed < AUTOMATIC_RECOVERY_COOLDOWN_SECONDS:
+                    save_state()
                     return None
 
-            lock_file.seek(1)
-            lock_file.truncate(1)
-            lock_file.write(f"{current_time:.6f}".encode("ascii"))
-            lock_file.flush()
+            state["last_attempt"] = current_time
+            if sustained_memory_signal:
+                state["memory_restart_attempted"] = True
+            save_state()
+            if sustained_memory_signal:
+                result = run_policy_safely(automatic_high_memory_restart=True)
+                if result is False:
+                    state.pop("memory_restart_attempted", None)
+                    save_state()
+                return result
             return run_policy_safely()
         finally:
             lock_file.seek(0)
@@ -410,95 +488,6 @@ def large_temporary_files(limit=10, minimum_size_mb=10):
     return large_files[:limit], scan_errors
 
 
-def is_project_flask_process(process):
-    command_line = process.cmdline()
-    working_directory = Path(process.cwd())
-    for argument in command_line:
-        candidate = Path(argument)
-        if candidate.name.lower() != MAIN_FILE.name.lower():
-            continue
-        if not candidate.is_absolute():
-            candidate = working_directory / candidate
-        try:
-            if candidate.resolve() == MAIN_FILE.resolve():
-                return True
-        except OSError:
-            continue
-    return False
-
-
-def project_flask_listeners():
-    try:
-        connections = psutil.net_connections(kind="inet")
-    except (psutil.AccessDenied, OSError) as error:
-        raise RuntimeError(
-            "Cannot safely inspect port 5000 listeners; refusing to start or stop Flask."
-        ) from error
-
-    listener_pids = {
-        connection.pid
-        for connection in connections
-        if connection.laddr
-        and connection.laddr.port == 5000
-        and connection.status == psutil.CONN_LISTEN
-    }
-    if None in listener_pids:
-        raise RuntimeError(
-            "Port 5000 has a listener with an unknown PID; refusing to alter it."
-        )
-
-    project_processes = []
-    for pid in listener_pids:
-        try:
-            process = psutil.Process(pid)
-            if not is_project_flask_process(process):
-                raise RuntimeError(
-                    f"Port 5000 is owned by PID {pid}, not this project's app/main.py; "
-                    "the process was left untouched."
-                )
-            project_processes.append(process)
-        except psutil.NoSuchProcess:
-            continue
-        except psutil.AccessDenied as error:
-            raise RuntimeError(
-                f"Cannot verify port-5000 listener PID {pid}; refusing to alter it."
-            ) from error
-
-    return project_processes
-
-
-def stop_project_flask():
-    processes = project_flask_listeners()
-    for process in processes:
-        try:
-            process.terminate()
-        except psutil.NoSuchProcess:
-            continue
-        except psutil.AccessDenied as error:
-            raise RuntimeError(
-                f"Permission denied while stopping project Flask PID {process.pid}."
-            ) from error
-
-    _, alive = psutil.wait_procs(processes, timeout=5)
-    for process in alive:
-        try:
-            process.kill()
-        except psutil.NoSuchProcess:
-            continue
-        except psutil.AccessDenied as error:
-            raise RuntimeError(
-                f"Permission denied while finishing Flask PID {process.pid} shutdown."
-            ) from error
-
-    if alive:
-        _, still_alive = psutil.wait_procs(alive, timeout=5)
-        if still_alive:
-            raise RuntimeError(
-                "Project Flask did not stop; recovery was not started."
-            )
-    return bool(processes)
-
-
 def rollback_started_process(process):
     if process.poll() is not None:
         return "The newly started process had already exited."
@@ -516,7 +505,7 @@ def rollback_started_process(process):
 
 
 def start_flask_and_verify():
-    if project_flask_listeners():
+    if project_flask_processes():
         raise RuntimeError(
             "A project Flask listener is still present; refusing to start a duplicate."
         )
@@ -567,7 +556,11 @@ def emit_result(result, decision, verification="", escalation=""):
     print(f"Recovery result: {result}")
 
 
-def run_policy(approve_high_memory_restart=False, approved_source_timestamp=None):
+def run_policy(
+    approve_high_memory_restart=False,
+    approved_source_timestamp=None,
+    automatic_high_memory_restart=False,
+):
     metrics, missing_columns = read_latest_metrics()
     source_timestamp = metrics.get("timestamp") if metrics else None
     incident_report = read_matching_incident(source_timestamp)
@@ -657,11 +650,10 @@ def run_policy(approve_high_memory_restart=False, approved_source_timestamp=None
         cause = probable_cause or (
             f"System memory usage is {memory:.1f}%; top consumers: {consumer_summary}."
         )
-        decision = (
-            "Restart is permitted only with explicit approval for this incident."
-        )
-
-        if not approve_high_memory_restart:
+        if not approve_high_memory_restart and not automatic_high_memory_restart:
+            decision = (
+                "Restart is permitted only with explicit approval for this incident."
+            )
             verification = (
                 f"Flask health is available; memory is {memory:.1f}%. "
                 f"Top process RSS: {consumer_summary}."
@@ -680,49 +672,75 @@ def run_policy(approve_high_memory_restart=False, approved_source_timestamp=None
             emit_result("APPROVAL_REQUIRED", decision, verification)
             return True
 
-        approval_age = (
-            metrics_age_seconds({"timestamp": approved_source_timestamp})
-            if approved_source_timestamp
-            else None
-        )
         live_memory = psutil.virtual_memory().percent
-        if (
-            approval_age is None
-            or approval_age > HIGH_MEMORY_APPROVAL_MAX_AGE_SECONDS
-            or approved_source_timestamp != source_timestamp
-            or memory < MEMORY_ALERT_THRESHOLD
-            or live_memory < MEMORY_ALERT_THRESHOLD
-        ):
-            verification = (
-                "Approval expired, the source incident changed, or high memory no longer "
-                "meets policy; no restart performed."
+        if automatic_high_memory_restart:
+            if live_memory < MEMORY_ALERT_THRESHOLD:
+                verification = (
+                    "Live memory dropped below the automatic restart threshold; "
+                    "no restart performed."
+                )
+                write_log(
+                    incident,
+                    cause,
+                    "Automatic high-memory restart cancelled by live revalidation",
+                    "None",
+                    "No action taken",
+                    verification,
+                    source_timestamp=source_timestamp,
+                )
+                emit_result("NO_ACTION", "High memory has cleared.", verification)
+                return True
+            decision = (
+                "Automatically restart Flask after sustained high memory."
             )
-            write_log(
-                incident,
-                cause,
-                "Explicit approval rejected by revalidation",
-                "None",
-                "No action taken",
-                verification,
-                source_timestamp=source_timestamp,
+            action = "Restart Flask after sustained high memory"
+        else:
+            approval_age = (
+                metrics_age_seconds({"timestamp": approved_source_timestamp})
+                if approved_source_timestamp
+                else None
             )
-            emit_result("NO_ACTION", "Approval failed safety revalidation.", verification)
-            return True
+            if (
+                approval_age is None
+                or approval_age > HIGH_MEMORY_APPROVAL_MAX_AGE_SECONDS
+                or approved_source_timestamp != source_timestamp
+                or memory < MEMORY_ALERT_THRESHOLD
+                or live_memory < MEMORY_ALERT_THRESHOLD
+            ):
+                verification = (
+                    "Approval expired, the source incident changed, or high memory no longer "
+                    "meets policy; no restart performed."
+                )
+                write_log(
+                    incident,
+                    cause,
+                    "Explicit approval rejected by revalidation",
+                    "None",
+                    "No action taken",
+                    verification,
+                    source_timestamp=source_timestamp,
+                )
+                emit_result(
+                    "NO_ACTION", "Approval failed safety revalidation.", verification
+                )
+                return True
+            decision = (
+                "Explicit approval received; restart Flask after fresh high-memory revalidation."
+            )
+            action = "Restart Flask after approved high memory"
 
-        decision = (
-            "Explicit approval received; restart Flask after fresh high-memory revalidation."
-        )
         try:
             if not retry_check(check_application, attempts=2):
                 raise RuntimeError(
-                    "Flask health failed during approval; crash recovery must be rerun."
+                    "Flask health failed during high-memory revalidation; "
+                    "the restart was aborted."
                 )
             restart_flask()
             write_log(
                 incident,
                 cause,
                 decision,
-                "Restart Flask after approved high memory",
+                action,
                 "Recovery successful",
                 "Health endpoint returned HTTP 200 after restart.",
                 source_timestamp=source_timestamp,
@@ -730,19 +748,23 @@ def run_policy(approve_high_memory_restart=False, approved_source_timestamp=None
             emit_result(
                 "RECOVERED",
                 decision,
-                "Flask health check passed after approved restart.",
+                (
+                    "Flask health check passed after automatic high-memory restart."
+                    if automatic_high_memory_restart
+                    else "Flask health check passed after approved restart."
+                ),
             )
             return True
         except (OSError, RuntimeError, subprocess.TimeoutExpired) as error:
             escalation = (
-                f"Approved restart failed: {error}. Local escalation recorded "
+                f"Flask restart failed: {error}. Local escalation recorded "
                 "for administrator review."
             )
             write_log(
                 incident,
                 cause,
                 decision,
-                "Restart Flask after approved high memory",
+                action,
                 "Recovery failed",
                 "Health check did not verify recovery.",
                 escalation,
@@ -875,11 +897,13 @@ def main():
 def run_policy_safely(
     approve_high_memory_restart=False,
     approved_source_timestamp=None,
+    automatic_high_memory_restart=False,
 ):
     try:
         return run_policy(
             approve_high_memory_restart=approve_high_memory_restart,
             approved_source_timestamp=approved_source_timestamp,
+            automatic_high_memory_restart=automatic_high_memory_restart,
         )
     except (OSError, RuntimeError, csv.Error, psutil.Error, ValueError) as error:
         escalation = (

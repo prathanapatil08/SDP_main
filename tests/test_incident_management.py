@@ -113,11 +113,6 @@ class IncidentManagementTests(unittest.TestCase):
                 self.database,
             )
         )
-        self.assertTrue(
-            incident_management.update_incident_status(
-                incident_id, "Resolved", self.database
-            )
-        )
 
         incident = incident_management.list_incidents(self.database)[0]
         self.assertEqual(incident["status"], "Resolved")
@@ -133,6 +128,42 @@ class IncidentManagementTests(unittest.TestCase):
             ],
             ["detected", "diagnosed", "acknowledged", "recovery_attempt", "resolved"],
         )
+
+    def test_failed_recovery_does_not_resolve_incident(self):
+        incident_id = incident_management.create_incident_from_report(
+            self.report, self.database
+        )
+        self.assertTrue(
+            incident_management.record_recovery_attempt(
+                self.report["source_timestamp"],
+                "Restart Flask application",
+                "Recovery failed",
+                "Health check did not verify recovery.",
+                self.database,
+            )
+        )
+        incident = incident_management.list_incidents(self.database)[0]
+        self.assertEqual(incident["incident_id"], incident_id)
+        self.assertEqual(incident["status"], "Open")
+        self.assertIsNone(incident["resolved_at"])
+
+    def test_verified_recovery_automatically_resolves_open_incident(self):
+        incident_id = incident_management.create_incident_from_report(
+            self.report, self.database
+        )
+        self.assertTrue(
+            incident_management.record_recovery_attempt(
+                self.report["source_timestamp"],
+                "Restart Flask application",
+                "Recovery successful",
+                "Health endpoint returned HTTP 200 after restart.",
+                self.database,
+            )
+        )
+        incident = incident_management.list_incidents(self.database)[0]
+        self.assertEqual(incident["incident_id"], incident_id)
+        self.assertEqual(incident["status"], "Resolved")
+        self.assertIsNotNone(incident["resolved_at"])
 
     def test_normal_report_does_not_create_incident(self):
         self.report["severity"] = "Normal"

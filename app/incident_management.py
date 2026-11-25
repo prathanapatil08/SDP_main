@@ -276,7 +276,8 @@ def record_recovery_attempt(
 ):
     with closing(_connect(db_path)) as connection, connection:
         incident = connection.execute(
-            "SELECT incident_id FROM incidents WHERE source_timestamp = ?",
+            "SELECT incident_id, status, created_at FROM incidents "
+            "WHERE source_timestamp = ?",
             (source_timestamp,),
         ).fetchone()
         if not incident:
@@ -288,6 +289,29 @@ def record_recovery_attempt(
             f"{action}: {result}",
             details,
         )
+        if result.strip().casefold() in {"recovery successful", "retry verified"}:
+            if incident["status"] != "Resolved":
+                now = _now()
+                created_at = datetime.fromisoformat(incident["created_at"])
+                resolution_time = max(
+                    0.0, (datetime.fromisoformat(now) - created_at).total_seconds()
+                )
+                connection.execute(
+                    """
+                    UPDATE incidents
+                    SET status = 'Resolved', updated_at = ?, resolved_at = ?,
+                        resolution_time_seconds = ?
+                    WHERE incident_id = ?
+                    """,
+                    (now, now, resolution_time, incident["incident_id"]),
+                )
+                _add_event(
+                    connection,
+                    incident["incident_id"],
+                    "resolved",
+                    "Automatically resolved after verified recovery",
+                    details,
+                )
     return True
 
 
