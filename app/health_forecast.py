@@ -1,11 +1,12 @@
 import math
 from datetime import datetime
 
+from app.health_policy import RESOURCE_WARNING_THRESHOLD
 
 TREND_POLICIES = (
-    ("cpu_usage", "CPU utilization", 85.0, "%"),
-    ("memory_usage", "Memory utilization", 90.0, "%"),
-    ("disk_usage", "Disk utilization", 90.0, "%"),
+    ("cpu_usage", "CPU utilization", RESOURCE_WARNING_THRESHOLD, "%"),
+    ("memory_usage", "Memory utilization", RESOURCE_WARNING_THRESHOLD, "%"),
+    ("disk_usage", "Disk utilization", RESOURCE_WARNING_THRESHOLD, "%"),
     ("response_time_ms", "API response time", 1000.0, " ms"),
     ("api_error_rate", "API error rate", 5.0, "%"),
 )

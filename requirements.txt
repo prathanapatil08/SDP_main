@@ -1,4 +1,5 @@
 flask
+altair
 pandas
 psutil
 scikit-learn

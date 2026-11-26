@@ -1,223 +1,283 @@
-timestamp,action,result
-2026-10-30 16:11:01,No recovery needed,Application healthy
-2026-10-30 16:12:12,Start Flask application,Recovery successful
-2026-10-30 16:14:09,No recovery needed,Application healthy
-2026-10-30 16:14:25,No recovery needed,Application healthy
-2026-10-30 16:14:39,No recovery needed,Application healthy
-2026-10-30 16:15:15,No recovery needed,Application healthy
-2026-10-30 16:15:45,No recovery needed,Application healthy
-2026-10-30 16:16:16,No recovery needed,Application healthy
-2026-10-30 16:16:46,No recovery needed,Application healthy
-2026-10-30 16:17:15,No recovery needed,Application healthy
-2026-10-30 16:17:29,No recovery needed,Application healthy
-2026-10-30 16:17:46,No recovery needed,Application healthy
-2026-10-30 16:18:30,No recovery needed,Application healthy
-2026-10-30 16:19:00,No recovery needed,Application healthy
-2026-10-30 16:19:00,No recovery needed,Application healthy
-2026-10-30 16:19:31,No recovery needed,Application healthy
-2026-10-30 16:20:01,No recovery needed,Application healthy
-2026-10-30 16:20:27,No recovery needed,Application healthy
-2026-10-30 16:21:07,No recovery needed,Application healthy
-2026-10-30 16:21:38,No recovery needed,Application healthy
-2026-10-30 16:22:08,No recovery needed,Application healthy
-2026-10-30 16:22:38,No recovery needed,Application healthy
-2026-10-30 16:23:07,No recovery needed,Application healthy
-2026-10-30 16:23:38,No recovery needed,Application healthy
-2026-10-30 16:24:13,No recovery needed,Application healthy
-2026-10-30 16:24:42,No recovery needed,Application healthy
-2026-10-30 16:25:13,No recovery needed,Application healthy
-2026-10-30 16:25:43,No recovery needed,Application healthy
-2026-10-30 16:26:13,No recovery needed,Application healthy
-2026-10-30 16:26:44,No recovery needed,Application healthy
-2026-10-30 16:27:13,No recovery needed,Application healthy
-2026-10-30 16:27:43,No recovery needed,Application healthy
-2026-10-30 16:28:19,No recovery needed,Application healthy
-2026-10-30 16:28:44,No recovery needed,Application healthy
-2026-10-30 16:29:14,No recovery needed,Application healthy
-2026-10-30 16:29:40,No recovery needed,Application healthy
-2026-10-30 16:30:14,No recovery needed,Application healthy
-2026-10-30 16:30:45,No recovery needed,Application healthy
-2026-10-30 16:31:14,No recovery needed,Application healthy
-2026-10-30 16:31:44,No recovery needed,Application healthy
-2026-10-30 16:32:14,No recovery needed,Application healthy
-2026-10-30 16:32:45,No recovery needed,Application healthy
-2026-10-30 16:33:14,No recovery needed,Application healthy
-2026-10-30 16:33:32,No recovery needed,Application healthy
-2026-10-30 16:34:16,No recovery needed,Application healthy
-2026-10-30 16:34:44,No recovery needed,Application healthy
-2026-10-30 16:35:12,No recovery needed,Application healthy
-2026-10-30 16:35:47,No recovery needed,Application healthy
-2026-10-30 16:36:17,No recovery needed,Application healthy
-2026-10-30 16:36:47,No recovery needed,Application healthy
-2026-10-30 16:37:18,No recovery needed,Application healthy
-2026-10-30 16:37:48,No recovery needed,Application healthy
-2026-10-30 16:38:18,No recovery needed,Application healthy
-2026-10-30 16:38:47,No recovery needed,Application healthy
-2026-10-30 16:39:17,No recovery needed,Application healthy
-2026-10-30 16:39:48,No recovery needed,Application healthy
-2026-10-30 19:17:40,Start Flask application,Recovery successful
-2026-10-30 19:17:53,No recovery needed,Application healthy
-2026-10-30 19:18:23,No recovery needed,Application healthy
-2026-10-30 19:18:52,No recovery needed,Application healthy
-2026-10-30 19:19:23,No recovery needed,Application healthy
-2026-10-30 19:19:52,No recovery needed,Application healthy
-2026-10-30 19:20:15,No recovery needed,Application healthy
-2026-10-30 19:20:52,No recovery needed,Application healthy
-2026-10-30 19:21:21,No recovery needed,Application healthy
-2026-10-30 19:21:51,No recovery needed,Application healthy
-2026-10-30 19:22:21,No recovery needed,Application healthy
-2026-10-30 19:22:52,No recovery needed,Application healthy
-2026-10-30 19:23:22,No recovery needed,Application healthy
-2026-10-30 19:23:39,No recovery needed,Application healthy
-2026-10-30 19:24:16,No recovery needed,Application healthy
-2026-10-30 19:24:45,No recovery needed,Application healthy
-2026-10-30 19:25:15,No recovery needed,Application healthy
-2026-10-30 19:25:45,No recovery needed,Application healthy
-2026-10-30 19:26:15,No recovery needed,Application healthy
-2026-10-30 19:26:45,No recovery needed,Application healthy
-2026-10-30 19:27:19,No recovery needed,Application healthy
-2026-10-30 19:28:19,No recovery needed,Application healthy
-2026-10-30 19:29:22,Start Flask application,Recovery successful
-2026-10-30 19:29:54,No recovery needed,Application healthy
-2026-10-30 19:30:23,No recovery needed,Application healthy
-2026-10-30 19:30:53,No recovery needed,Application healthy
-2026-10-30 19:31:24,No recovery needed,Application healthy
-2026-10-30 19:31:54,No recovery needed,Application healthy
-2026-10-30 19:32:24,No recovery needed,Application healthy
-2026-10-30 19:32:54,No recovery needed,Application healthy
-2026-10-30 19:33:23,No recovery needed,Application healthy
-2026-10-30 19:34:19,No recovery needed,Application healthy
-2026-10-30 19:35:19,No recovery needed,Application healthy
-2026-10-30 19:36:19,No recovery needed,Application healthy
-2026-10-30 19:36:20,No recovery needed,Application healthy
-2026-10-30 19:37:22,No recovery needed,Application healthy
-2026-10-30 19:38:19,No recovery needed,Application healthy
-2026-10-30 19:39:19,No recovery needed,Application healthy
-2026-10-30 19:40:19,No recovery needed,Application healthy
-2026-10-30 19:41:20,No recovery needed,Application healthy
-2026-10-30 19:42:19,No recovery needed,Application healthy
-2026-10-30 19:43:20,No recovery needed,Application healthy
-2026-10-30 19:44:20,No recovery needed,Application healthy
-2026-10-30 19:45:16,No recovery needed,Application healthy
-2026-10-30 19:45:52,No recovery needed,Application healthy
-2026-10-30 19:46:22,No recovery needed,Application healthy
-2026-10-30 19:46:52,No recovery needed,Application healthy
-2026-10-30 19:47:22,No recovery needed,Application healthy
-2026-10-30 19:47:52,No recovery needed,Application healthy
-2026-10-30 19:48:22,No recovery needed,Application healthy
-2026-10-30 19:48:52,No recovery needed,Application healthy
-2026-10-30 19:49:23,No recovery needed,Application healthy
-2026-10-30 19:49:52,No recovery needed,Application healthy
-2026-10-30 19:50:23,No recovery needed,Application healthy
-2026-10-30 19:50:52,No recovery needed,Application healthy
-2026-10-30 19:51:23,No recovery needed,Application healthy
-2026-10-30 19:52:19,No recovery needed,Application healthy
-2026-10-30 19:53:19,No recovery needed,Application healthy
-2026-10-30 19:54:19,No recovery needed,Application healthy
-2026-10-30 19:55:19,No recovery needed,Application healthy
-2026-10-30 19:56:20,No recovery needed,Application healthy
-2026-10-30 19:57:22,No recovery needed,Application healthy
-2026-10-30 19:57:53,No recovery needed,Application healthy
-2026-10-30 19:58:22,No recovery needed,Application healthy
-2026-10-30 19:58:53,No recovery needed,Application healthy
-2026-10-30 19:59:22,No recovery needed,Application healthy
-2026-10-30 19:59:53,No recovery needed,Application healthy
-2026-10-30 20:01:04,No recovery needed,Application healthy
-2026-10-30 20:02:07,No recovery needed,Application healthy
-2026-10-30 20:03:06,No recovery needed,Application healthy
-2026-10-30 20:04:08,No recovery needed,Application healthy
-2026-10-30 20:05:09,No recovery needed,Application healthy
-2026-10-30 20:06:09,No recovery needed,Application healthy
-2026-10-30 20:07:11,No recovery needed,Application healthy
-2026-10-30 20:11:29,Start Flask application,Recovery successful
-2026-11-01 20:04:47,No recovery needed,Application healthy
-2026-11-01 20:05:20,No recovery needed,Application healthy
-2026-11-01 20:05:51,No recovery needed,Application healthy
-2026-11-01 20:06:12,No recovery needed,Application healthy
-2026-11-01 20:06:47,No recovery needed,Application healthy
-2026-11-01 20:07:15,No recovery needed,Application healthy
-2026-11-01 20:07:50,No recovery needed,Application healthy
-2026-11-01 20:08:18,No recovery needed,Application healthy
-2026-11-01 20:08:48,No recovery needed,Application healthy
-2026-11-01 20:09:45,No recovery needed,Application healthy
-2026-11-01 20:10:30,No recovery needed,Application healthy
-2026-11-01 20:10:42,No recovery needed,Application healthy
-2026-11-01 20:11:20,No recovery needed,Application healthy
-2026-11-01 20:11:50,No recovery needed,Application healthy
-2026-11-01 20:12:23,No recovery needed,Application healthy
-2026-11-01 20:12:54,No recovery needed,Application healthy
-2026-11-01 20:13:23,No recovery needed,Application healthy
-2026-11-01 20:13:54,No recovery needed,Application healthy
-2026-11-01 20:14:25,No recovery needed,Application healthy
-2026-11-01 20:31:10,No recovery needed,Application healthy
-2026-11-01 20:31:48,No recovery needed,Application healthy
-2026-11-01 20:32:18,No recovery needed,Application healthy
-2026-11-01 20:32:47,No recovery needed,Application healthy
-2026-11-01 20:33:17,No recovery needed,Application healthy
-2026-11-01 20:33:48,No recovery needed,Application healthy
-2026-11-01 20:34:17,No recovery needed,Application healthy
-2026-11-01 20:34:52,Start Flask application,Recovery successful
-2026-11-01 20:35:17,No recovery needed,Application healthy
-2026-11-01 20:35:47,No recovery needed,Application healthy
-2026-11-01 20:36:17,No recovery needed,Application healthy
-2026-11-01 20:36:47,No recovery needed,Application healthy
-2026-11-01 20:37:17,No recovery needed,Application healthy
-2026-11-01 20:37:47,No recovery needed,Application healthy
-2026-11-01 20:38:17,No recovery needed,Application healthy
-2026-11-01 20:38:48,No recovery needed,Application healthy
-2026-11-01 20:39:28,No recovery needed,Application healthy
-2026-11-01 20:40:28,No recovery needed,Application healthy
-2026-11-01 20:41:29,No recovery needed,Application healthy
-2026-11-01 20:42:28,No recovery needed,Application healthy
-2026-11-01 20:43:27,No recovery needed,Application healthy
-2026-11-01 20:44:28,No recovery needed,Application healthy
-2026-11-01 20:45:28,No recovery needed,Application healthy
-2026-11-01 20:46:28,No recovery needed,Application healthy
-2026-11-01 20:47:28,No recovery needed,Application healthy
-2026-11-01 20:48:28,No recovery needed,Application healthy
-2026-11-01 20:51:08,No recovery needed,Application healthy
-2026-11-01 20:51:47,No recovery needed,Application healthy
-2026-11-01 20:52:19,No recovery needed,Application healthy
-2026-11-01 20:52:51,No recovery needed,Application healthy
-2026-11-01 20:53:19,No recovery needed,Application healthy
-2026-11-01 20:53:49,No recovery needed,Application healthy
-2026-11-01 20:54:18,No recovery needed,Application healthy
-2026-11-01 21:21:12,No recovery needed,Application healthy
-2026-11-01 21:21:33,No recovery needed,Application healthy
-2026-11-01 21:22:17,No recovery needed,Application healthy
-2026-11-01 21:22:47,No recovery needed,Application healthy
-2026-11-01 21:23:17,No recovery needed,Application healthy
-2026-11-01 21:23:47,No recovery needed,Application healthy
-2026-11-01 21:24:18,No recovery needed,Application healthy
-2026-11-01 21:24:58,Start Flask application,Recovery successful
-2026-11-01 21:25:27,Start Flask application,Recovery successful
-2026-11-01 21:25:54,No recovery needed,Application healthy
-2026-11-01 21:26:23,No recovery needed,Application healthy
-2026-11-01 21:26:54,No recovery needed,Application healthy
-2026-11-01 21:27:24,No recovery needed,Application healthy
-2026-11-01 21:28:04,No recovery needed,Application healthy
-2026-11-01 21:28:28,No recovery needed,Application healthy
-2026-11-01 21:29:28,No recovery needed,Application healthy
-2026-11-01 21:30:28,No recovery needed,Application healthy
-2026-11-01 21:31:28,No recovery needed,Application healthy
-2026-11-01 21:32:33,No recovery needed,Application healthy
-2026-11-01 21:33:31,No recovery needed,Application healthy
-2026-11-01 21:34:31,No recovery needed,Application healthy
-2026-11-01 21:35:31,No recovery needed,Application healthy
-2026-11-01 21:36:32,No recovery needed,Application healthy
-2026-11-01 21:37:31,No recovery needed,Application healthy
-2026-11-01 21:38:31,No recovery needed,Application healthy
-2026-11-01 21:39:06,No recovery needed,Application healthy
-2026-11-01 21:39:37,No recovery needed,Application healthy
-2026-11-01 21:40:07,No recovery needed,Application healthy
-2026-11-01 21:40:37,No recovery needed,Application healthy
-2026-11-01 21:41:07,No recovery needed,Application healthy
-2026-11-01 21:41:37,No recovery needed,Application healthy
-2026-11-01 21:42:07,No recovery needed,Application healthy
-2026-11-01 21:42:38,No recovery needed,Application healthy
-2026-11-01 22:33:04,Start Flask application,Recovery successful
-2026-11-02 08:56:02,Start Flask application,Recovery successful
-2026-11-02 09:03:15,Start Flask application,Recovery successful
-2026-11-02 09:09:57,Start Flask application,Recovery successful
-2026-11-02 09:42:32,Start Flask application,Recovery successful
-2026-11-13 13:42:15,Start Flask application,Recovery successful
+timestamp,incident,probable_cause,policy_decision,action,result,verification,escalation
+2026-10-30 16:11:01,,,,No recovery needed,Application healthy,,
+2026-10-30 16:12:12,,,,Start Flask application,Recovery successful,,
+2026-10-30 16:14:09,,,,No recovery needed,Application healthy,,
+2026-10-30 16:14:25,,,,No recovery needed,Application healthy,,
+2026-10-30 16:14:39,,,,No recovery needed,Application healthy,,
+2026-10-30 16:15:15,,,,No recovery needed,Application healthy,,
+2026-10-30 16:15:45,,,,No recovery needed,Application healthy,,
+2026-10-30 16:16:16,,,,No recovery needed,Application healthy,,
+2026-10-30 16:16:46,,,,No recovery needed,Application healthy,,
+2026-10-30 16:17:15,,,,No recovery needed,Application healthy,,
+2026-10-30 16:17:29,,,,No recovery needed,Application healthy,,
+2026-10-30 16:17:46,,,,No recovery needed,Application healthy,,
+2026-10-30 16:18:30,,,,No recovery needed,Application healthy,,
+2026-10-30 16:19:00,,,,No recovery needed,Application healthy,,
+2026-10-30 16:19:00,,,,No recovery needed,Application healthy,,
+2026-10-30 16:19:31,,,,No recovery needed,Application healthy,,
+2026-10-30 16:20:01,,,,No recovery needed,Application healthy,,
+2026-10-30 16:20:27,,,,No recovery needed,Application healthy,,
+2026-10-30 16:21:07,,,,No recovery needed,Application healthy,,
+2026-10-30 16:21:38,,,,No recovery needed,Application healthy,,
+2026-10-30 16:22:08,,,,No recovery needed,Application healthy,,
+2026-10-30 16:22:38,,,,No recovery needed,Application healthy,,
+2026-10-30 16:23:07,,,,No recovery needed,Application healthy,,
+2026-10-30 16:23:38,,,,No recovery needed,Application healthy,,
+2026-10-30 16:24:13,,,,No recovery needed,Application healthy,,
+2026-10-30 16:24:42,,,,No recovery needed,Application healthy,,
+2026-10-30 16:25:13,,,,No recovery needed,Application healthy,,
+2026-10-30 16:25:43,,,,No recovery needed,Application healthy,,
+2026-10-30 16:26:13,,,,No recovery needed,Application healthy,,
+2026-10-30 16:26:44,,,,No recovery needed,Application healthy,,
+2026-10-30 16:27:13,,,,No recovery needed,Application healthy,,
+2026-10-30 16:27:43,,,,No recovery needed,Application healthy,,
+2026-10-30 16:28:19,,,,No recovery needed,Application healthy,,
+2026-10-30 16:28:44,,,,No recovery needed,Application healthy,,
+2026-10-30 16:29:14,,,,No recovery needed,Application healthy,,
+2026-10-30 16:29:40,,,,No recovery needed,Application healthy,,
+2026-10-30 16:30:14,,,,No recovery needed,Application healthy,,
+2026-10-30 16:30:45,,,,No recovery needed,Application healthy,,
+2026-10-30 16:31:14,,,,No recovery needed,Application healthy,,
+2026-10-30 16:31:44,,,,No recovery needed,Application healthy,,
+2026-10-30 16:32:14,,,,No recovery needed,Application healthy,,
+2026-10-30 16:32:45,,,,No recovery needed,Application healthy,,
+2026-10-30 16:33:14,,,,No recovery needed,Application healthy,,
+2026-10-30 16:33:32,,,,No recovery needed,Application healthy,,
+2026-10-30 16:34:16,,,,No recovery needed,Application healthy,,
+2026-10-30 16:34:44,,,,No recovery needed,Application healthy,,
+2026-10-30 16:35:12,,,,No recovery needed,Application healthy,,
+2026-10-30 16:35:47,,,,No recovery needed,Application healthy,,
+2026-10-30 16:36:17,,,,No recovery needed,Application healthy,,
+2026-10-30 16:36:47,,,,No recovery needed,Application healthy,,
+2026-10-30 16:37:18,,,,No recovery needed,Application healthy,,
+2026-10-30 16:37:48,,,,No recovery needed,Application healthy,,
+2026-10-30 16:38:18,,,,No recovery needed,Application healthy,,
+2026-10-30 16:38:47,,,,No recovery needed,Application healthy,,
+2026-10-30 16:39:17,,,,No recovery needed,Application healthy,,
+2026-10-30 16:39:48,,,,No recovery needed,Application healthy,,
+2026-10-30 19:17:40,,,,Start Flask application,Recovery successful,,
+2026-10-30 19:17:53,,,,No recovery needed,Application healthy,,
+2026-10-30 19:18:23,,,,No recovery needed,Application healthy,,
+2026-10-30 19:18:52,,,,No recovery needed,Application healthy,,
+2026-10-30 19:19:23,,,,No recovery needed,Application healthy,,
+2026-10-30 19:19:52,,,,No recovery needed,Application healthy,,
+2026-10-30 19:20:15,,,,No recovery needed,Application healthy,,
+2026-10-30 19:20:52,,,,No recovery needed,Application healthy,,
+2026-10-30 19:21:21,,,,No recovery needed,Application healthy,,
+2026-10-30 19:21:51,,,,No recovery needed,Application healthy,,
+2026-10-30 19:22:21,,,,No recovery needed,Application healthy,,
+2026-10-30 19:22:52,,,,No recovery needed,Application healthy,,
+2026-10-30 19:23:22,,,,No recovery needed,Application healthy,,
+2026-10-30 19:23:39,,,,No recovery needed,Application healthy,,
+2026-10-30 19:24:16,,,,No recovery needed,Application healthy,,
+2026-10-30 19:24:45,,,,No recovery needed,Application healthy,,
+2026-10-30 19:25:15,,,,No recovery needed,Application healthy,,
+2026-10-30 19:25:45,,,,No recovery needed,Application healthy,,
+2026-10-30 19:26:15,,,,No recovery needed,Application healthy,,
+2026-10-30 19:26:45,,,,No recovery needed,Application healthy,,
+2026-10-30 19:27:19,,,,No recovery needed,Application healthy,,
+2026-10-30 19:28:19,,,,No recovery needed,Application healthy,,
+2026-10-30 19:29:22,,,,Start Flask application,Recovery successful,,
+2026-10-30 19:29:54,,,,No recovery needed,Application healthy,,
+2026-10-30 19:30:23,,,,No recovery needed,Application healthy,,
+2026-10-30 19:30:53,,,,No recovery needed,Application healthy,,
+2026-10-30 19:31:24,,,,No recovery needed,Application healthy,,
+2026-10-30 19:31:54,,,,No recovery needed,Application healthy,,
+2026-10-30 19:32:24,,,,No recovery needed,Application healthy,,
+2026-10-30 19:32:54,,,,No recovery needed,Application healthy,,
+2026-10-30 19:33:23,,,,No recovery needed,Application healthy,,
+2026-10-30 19:34:19,,,,No recovery needed,Application healthy,,
+2026-10-30 19:35:19,,,,No recovery needed,Application healthy,,
+2026-10-30 19:36:19,,,,No recovery needed,Application healthy,,
+2026-10-30 19:36:20,,,,No recovery needed,Application healthy,,
+2026-10-30 19:37:22,,,,No recovery needed,Application healthy,,
+2026-10-30 19:38:19,,,,No recovery needed,Application healthy,,
+2026-10-30 19:39:19,,,,No recovery needed,Application healthy,,
+2026-10-30 19:40:19,,,,No recovery needed,Application healthy,,
+2026-10-30 19:41:20,,,,No recovery needed,Application healthy,,
+2026-10-30 19:42:19,,,,No recovery needed,Application healthy,,
+2026-10-30 19:43:20,,,,No recovery needed,Application healthy,,
+2026-10-30 19:44:20,,,,No recovery needed,Application healthy,,
+2026-10-30 19:45:16,,,,No recovery needed,Application healthy,,
+2026-10-30 19:45:52,,,,No recovery needed,Application healthy,,
+2026-10-30 19:46:22,,,,No recovery needed,Application healthy,,
+2026-10-30 19:46:52,,,,No recovery needed,Application healthy,,
+2026-10-30 19:47:22,,,,No recovery needed,Application healthy,,
+2026-10-30 19:47:52,,,,No recovery needed,Application healthy,,
+2026-10-30 19:48:22,,,,No recovery needed,Application healthy,,
+2026-10-30 19:48:52,,,,No recovery needed,Application healthy,,
+2026-10-30 19:49:23,,,,No recovery needed,Application healthy,,
+2026-10-30 19:49:52,,,,No recovery needed,Application healthy,,
+2026-10-30 19:50:23,,,,No recovery needed,Application healthy,,
+2026-10-30 19:50:52,,,,No recovery needed,Application healthy,,
+2026-10-30 19:51:23,,,,No recovery needed,Application healthy,,
+2026-10-30 19:52:19,,,,No recovery needed,Application healthy,,
+2026-10-30 19:53:19,,,,No recovery needed,Application healthy,,
+2026-10-30 19:54:19,,,,No recovery needed,Application healthy,,
+2026-10-30 19:55:19,,,,No recovery needed,Application healthy,,
+2026-10-30 19:56:20,,,,No recovery needed,Application healthy,,
+2026-10-30 19:57:22,,,,No recovery needed,Application healthy,,
+2026-10-30 19:57:53,,,,No recovery needed,Application healthy,,
+2026-10-30 19:58:22,,,,No recovery needed,Application healthy,,
+2026-10-30 19:58:53,,,,No recovery needed,Application healthy,,
+2026-10-30 19:59:22,,,,No recovery needed,Application healthy,,
+2026-10-30 19:59:53,,,,No recovery needed,Application healthy,,
+2026-10-30 20:01:04,,,,No recovery needed,Application healthy,,
+2026-10-30 20:02:07,,,,No recovery needed,Application healthy,,
+2026-10-30 20:03:06,,,,No recovery needed,Application healthy,,
+2026-10-30 20:04:08,,,,No recovery needed,Application healthy,,
+2026-10-30 20:05:09,,,,No recovery needed,Application healthy,,
+2026-10-30 20:06:09,,,,No recovery needed,Application healthy,,
+2026-10-30 20:07:11,,,,No recovery needed,Application healthy,,
+2026-10-30 20:11:29,,,,Start Flask application,Recovery successful,,
+2026-11-01 20:04:47,,,,No recovery needed,Application healthy,,
+2026-11-01 20:05:20,,,,No recovery needed,Application healthy,,
+2026-11-01 20:05:51,,,,No recovery needed,Application healthy,,
+2026-11-01 20:06:12,,,,No recovery needed,Application healthy,,
+2026-11-01 20:06:47,,,,No recovery needed,Application healthy,,
+2026-11-01 20:07:15,,,,No recovery needed,Application healthy,,
+2026-11-01 20:07:50,,,,No recovery needed,Application healthy,,
+2026-11-01 20:08:18,,,,No recovery needed,Application healthy,,
+2026-11-01 20:08:48,,,,No recovery needed,Application healthy,,
+2026-11-01 20:09:45,,,,No recovery needed,Application healthy,,
+2026-11-01 20:10:30,,,,No recovery needed,Application healthy,,
+2026-11-01 20:10:42,,,,No recovery needed,Application healthy,,
+2026-11-01 20:11:20,,,,No recovery needed,Application healthy,,
+2026-11-01 20:11:50,,,,No recovery needed,Application healthy,,
+2026-11-01 20:12:23,,,,No recovery needed,Application healthy,,
+2026-11-01 20:12:54,,,,No recovery needed,Application healthy,,
+2026-11-01 20:13:23,,,,No recovery needed,Application healthy,,
+2026-11-01 20:13:54,,,,No recovery needed,Application healthy,,
+2026-11-01 20:14:25,,,,No recovery needed,Application healthy,,
+2026-11-01 20:31:10,,,,No recovery needed,Application healthy,,
+2026-11-01 20:31:48,,,,No recovery needed,Application healthy,,
+2026-11-01 20:32:18,,,,No recovery needed,Application healthy,,
+2026-11-01 20:32:47,,,,No recovery needed,Application healthy,,
+2026-11-01 20:33:17,,,,No recovery needed,Application healthy,,
+2026-11-01 20:33:48,,,,No recovery needed,Application healthy,,
+2026-11-01 20:34:17,,,,No recovery needed,Application healthy,,
+2026-11-01 20:34:52,,,,Start Flask application,Recovery successful,,
+2026-11-01 20:35:17,,,,No recovery needed,Application healthy,,
+2026-11-01 20:35:47,,,,No recovery needed,Application healthy,,
+2026-11-01 20:36:17,,,,No recovery needed,Application healthy,,
+2026-11-01 20:36:47,,,,No recovery needed,Application healthy,,
+2026-11-01 20:37:17,,,,No recovery needed,Application healthy,,
+2026-11-01 20:37:47,,,,No recovery needed,Application healthy,,
+2026-11-01 20:38:17,,,,No recovery needed,Application healthy,,
+2026-11-01 20:38:48,,,,No recovery needed,Application healthy,,
+2026-11-01 20:39:28,,,,No recovery needed,Application healthy,,
+2026-11-01 20:40:28,,,,No recovery needed,Application healthy,,
+2026-11-01 20:41:29,,,,No recovery needed,Application healthy,,
+2026-11-01 20:42:28,,,,No recovery needed,Application healthy,,
+2026-11-01 20:43:27,,,,No recovery needed,Application healthy,,
+2026-11-01 20:44:28,,,,No recovery needed,Application healthy,,
+2026-11-01 20:45:28,,,,No recovery needed,Application healthy,,
+2026-11-01 20:46:28,,,,No recovery needed,Application healthy,,
+2026-11-01 20:47:28,,,,No recovery needed,Application healthy,,
+2026-11-01 20:48:28,,,,No recovery needed,Application healthy,,
+2026-11-01 20:51:08,,,,No recovery needed,Application healthy,,
+2026-11-01 20:51:47,,,,No recovery needed,Application healthy,,
+2026-11-01 20:52:19,,,,No recovery needed,Application healthy,,
+2026-11-01 20:52:51,,,,No recovery needed,Application healthy,,
+2026-11-01 20:53:19,,,,No recovery needed,Application healthy,,
+2026-11-01 20:53:49,,,,No recovery needed,Application healthy,,
+2026-11-01 20:54:18,,,,No recovery needed,Application healthy,,
+2026-11-01 21:21:12,,,,No recovery needed,Application healthy,,
+2026-11-01 21:21:33,,,,No recovery needed,Application healthy,,
+2026-11-01 21:22:17,,,,No recovery needed,Application healthy,,
+2026-11-01 21:22:47,,,,No recovery needed,Application healthy,,
+2026-11-01 21:23:17,,,,No recovery needed,Application healthy,,
+2026-11-01 21:23:47,,,,No recovery needed,Application healthy,,
+2026-11-01 21:24:18,,,,No recovery needed,Application healthy,,
+2026-11-01 21:24:58,,,,Start Flask application,Recovery successful,,
+2026-11-01 21:25:27,,,,Start Flask application,Recovery successful,,
+2026-11-01 21:25:54,,,,No recovery needed,Application healthy,,
+2026-11-01 21:26:23,,,,No recovery needed,Application healthy,,
+2026-11-01 21:26:54,,,,No recovery needed,Application healthy,,
+2026-11-01 21:27:24,,,,No recovery needed,Application healthy,,
+2026-11-01 21:28:04,,,,No recovery needed,Application healthy,,
+2026-11-01 21:28:28,,,,No recovery needed,Application healthy,,
+2026-11-01 21:29:28,,,,No recovery needed,Application healthy,,
+2026-11-01 21:30:28,,,,No recovery needed,Application healthy,,
+2026-11-01 21:31:28,,,,No recovery needed,Application healthy,,
+2026-11-01 21:32:33,,,,No recovery needed,Application healthy,,
+2026-11-01 21:33:31,,,,No recovery needed,Application healthy,,
+2026-11-01 21:34:31,,,,No recovery needed,Application healthy,,
+2026-11-01 21:35:31,,,,No recovery needed,Application healthy,,
+2026-11-01 21:36:32,,,,No recovery needed,Application healthy,,
+2026-11-01 21:37:31,,,,No recovery needed,Application healthy,,
+2026-11-01 21:38:31,,,,No recovery needed,Application healthy,,
+2026-11-01 21:39:06,,,,No recovery needed,Application healthy,,
+2026-11-01 21:39:37,,,,No recovery needed,Application healthy,,
+2026-11-01 21:40:07,,,,No recovery needed,Application healthy,,
+2026-11-01 21:40:37,,,,No recovery needed,Application healthy,,
+2026-11-01 21:41:07,,,,No recovery needed,Application healthy,,
+2026-11-01 21:41:37,,,,No recovery needed,Application healthy,,
+2026-11-01 21:42:07,,,,No recovery needed,Application healthy,,
+2026-11-01 21:42:38,,,,No recovery needed,Application healthy,,
+2026-11-01 22:33:04,,,,Start Flask application,Recovery successful,,
+2026-11-02 08:56:02,,,,Start Flask application,Recovery successful,,
+2026-11-02 09:03:15,,,,Start Flask application,Recovery successful,,
+2026-11-02 09:09:57,,,,Start Flask application,Recovery successful,,
+2026-11-02 09:42:32,,,,Start Flask application,Recovery successful,,
+2026-11-13 13:42:15,,,,Start Flask application,Recovery successful,,
+2026-11-25 11:31:12,disk usage 93.1%,disk usage 93.1%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:32:17,disk usage 93.1%,disk usage 93.1%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:33:22,disk usage 93.1%,disk usage 93.1%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:34:22,disk usage 93.1%,disk usage 93.1%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:35:22,disk usage 93.6%,disk usage 93.6%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:36:22,disk usage 93.6%,disk usage 93.6%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:37:27,disk usage 93.6%,disk usage 93.6%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:38:27,disk usage 93.6%,disk usage 93.6%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:39:32,disk usage 93.3%,disk usage 93.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:40:32,disk usage 93.3%,disk usage 93.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:41:37,disk usage 93.3%,disk usage 93.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:42:37,disk usage 93.3%,disk usage 93.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:43:37,disk usage 93.3%,disk usage 93.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:44:42,disk usage 93.3%,disk usage 93.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:45:47,disk usage 93.3%,disk usage 93.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:47:02,disk usage 93.9%,disk usage 93.9%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:48:07,disk usage 93.9%,disk usage 93.9%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:49:12,disk usage 93.9%,disk usage 93.9%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:50:12,disk usage 93.9%,disk usage 93.9%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:51:14,disk usage 93.9%,disk usage 93.9%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:52:17,disk usage 93.9%,disk usage 93.9%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:53:17,disk usage 93.9%,disk usage 93.9%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:54:22,disk usage 93.9%,disk usage 93.9%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:55:22,disk usage 93.9%,disk usage 93.9%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:56:22,disk usage 93.9%,disk usage 93.9%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:57:27,disk usage 93.9%,disk usage 93.9%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:58:32,disk usage 93.8%,disk usage 93.8%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 11:59:37,disk usage 93.8%,disk usage 93.8%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 12:00:37,disk usage 93.7%,disk usage 93.7%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 12:01:42,disk usage 93.7%,disk usage 93.7%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 12:02:47,disk usage 93.7%,disk usage 93.7%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 12:03:47,disk usage 93.7%,disk usage 93.7%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 12:04:52,disk usage 93.7%,disk usage 93.7%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 12:05:52,disk usage 93.6%,disk usage 93.6%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 12:06:52,disk usage 93.6%,disk usage 93.6%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 12:07:52,disk usage 93.6%,disk usage 93.6%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-25 12:08:57,disk usage 93.3%,disk usage 93.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-8a14f0cc1b08d531eb83255ea3764ae22aa932b5.exe (275.8 MB); C:\Users\Admin\AppData\Local\Temp\compass-install.exe (190.0 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:34:57,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:35:57,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:37:02,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:38:06,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:39:06,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:40:11,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:41:12,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:42:12,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:43:12,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:44:12,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:45:17,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:46:17,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:47:27,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:48:27,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:49:27,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:50:27,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:51:32,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:52:32,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:53:32,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:54:37,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:55:42,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:56:52,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),
+2026-11-26 16:57:52,disk usage 95.3%,disk usage 95.3%,Diagnostic only; no file deletion is permitted,Identify large temporary files,Diagnosis completed,Scanned the system temp directory; no files were deleted. C:\Users\Admin\AppData\Local\Temp\vscode-stable-user-x64\CodeSetup-stable-661626d0e72f97806550790a98fb87116c9db825.exe (275.2 MB); C:\Users\Admin\AppData\Local\Temp\3D6F7BD5-EEB9-4EB8-B1A7-B69F7FB65099\swap.vhdx (36.0 MB),

@@ -1,7 +1,9 @@
 
 import csv
 import json
+import logging
 import os
+import sqlite3
 import sys
 import tempfile
 import time
@@ -18,6 +20,13 @@ if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
 from app import self_healing
+from app.database import LEGACY_FLASK_APPLICATION_ID
+from app.multi_app_monitor import (
+    start_monitoring,
+    stop_monitoring,
+    store_application_telemetry,
+)
+from ml.detect_anomalies import analyze_application
 
 
 # CSV file location
@@ -119,9 +128,14 @@ print("SDP System Monitoring Started")
 print("Collecting metrics every 5 seconds...")
 print("Press CTRL + C to stop monitoring.\n")
 
+start_monitoring(
+    exclude_application_ids={LEGACY_FLASK_APPLICATION_ID}
+)
+
 previous_network = psutil.net_io_counters()
 previous_sample_time = time.monotonic()
 previous_api_metrics = None
+legacy_consecutive_failure_count = 0
 psutil.cpu_percent(interval=None)
 
 try:
@@ -213,6 +227,11 @@ try:
             previous_api_metrics = None
             print("Application API metrics unavailable; recording blank API metrics.")
 
+        if app_status == "Healthy":
+            legacy_consecutive_failure_count = 0
+        else:
+            legacy_consecutive_failure_count += 1
+
         # Current timestamp
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -244,24 +263,143 @@ try:
                 app_status,
             ])
 
+        legacy_telemetry = {
+            "application_id": LEGACY_FLASK_APPLICATION_ID,
+            "timestamp": timestamp,
+            "availability": app_status == "Healthy",
+            "http_status_code": 200 if app_status == "Healthy" else None,
+            "response_time_ms": (
+                response_time if response_time != "" else health_response_time
+            ),
+            "request_success": app_status == "Healthy",
+            "connection_error": app_status == "Unreachable",
+            "timeout_error": False,
+            "failure_type": (
+                None if app_status == "Healthy" else "connection_error"
+            ),
+            "consecutive_failure_count": legacy_consecutive_failure_count,
+            "last_successful_response_time_ms": (
+                response_time if app_status == "Healthy" else None
+            ),
+            "cpu_usage": None,
+            "memory_usage": (
+                process_memory_percent
+                if application_metrics is not None
+                else None
+            ),
+            "process_id": process_pid or None,
+            "process_status": None,
+            "process_memory_mb": (
+                process_memory_mb
+                if application_metrics is not None
+                else None
+            ),
+            "process_cpu_percent": None,
+            "error_details": (
+                None
+                if app_status == "Healthy"
+                else "The project Flask health endpoint is unreachable."
+            ),
+            "is_simulated": False,
+        }
         try:
-            automatic_recovery_result = self_healing.run_automatic_policy_if_needed(
-                app_status,
-                {
-                    "cpu_usage": cpu,
-                    "memory_usage": memory_usage,
-                    "disk_usage": disk_usage,
-                    "response_time_ms": response_time,
-                    "api_error_rate": api_error_rate,
-                },
+            store_application_telemetry(
+                legacy_telemetry,
+                source="legacy_monitor",
             )
-        except (OSError, RuntimeError, csv.Error, psutil.Error, ValueError) as error:
-            print(f"Automatic recovery coordinator failed: {error}")
+        except (OSError, RuntimeError, sqlite3.Error, ValueError) as error:
+            logging.getLogger(__name__).exception(
+                "Could not store Flask application telemetry: %s",
+                error,
+            )
         else:
-            if automatic_recovery_result is False:
-                print("Automatic recovery failed; check the self-healing log.")
-            elif automatic_recovery_result is True:
-                print("Automatic recovery policy evaluated; check the self-healing log.")
+            try:
+                detection = analyze_application(LEGACY_FLASK_APPLICATION_ID)
+            except Exception:
+                logging.getLogger(__name__).exception(
+                    "Flask application anomaly detection failed; "
+                    "monitoring will continue."
+                )
+            else:
+                for anomaly in detection.get("anomalies", []):
+                    try:
+                        from ml.application_root_cause import (
+                            generate_application_rca,
+                        )
+
+                        generate_application_rca(
+                            LEGACY_FLASK_APPLICATION_ID,
+                            source_timestamp=anomaly["timestamp"],
+                        )
+                    except Exception:
+                        logging.getLogger(__name__).exception(
+                            "Flask application root cause analysis failed at %s; "
+                            "monitoring will continue.",
+                            anomaly.get("timestamp"),
+                        )
+                    try:
+                        from app.incident_management import (
+                            process_application_anomaly,
+                        )
+
+                        incident_id = process_application_anomaly(
+                            LEGACY_FLASK_APPLICATION_ID,
+                            anomaly["timestamp"],
+                        )
+                    except Exception:
+                        logging.getLogger(__name__).exception(
+                            "Flask application incident processing failed at %s; "
+                            "monitoring will continue.",
+                            anomaly.get("timestamp"),
+                        )
+                    else:
+                        if incident_id:
+                            try:
+                                from app.recovery_framework import process_incident
+
+                                process_incident(incident_id)
+                            except Exception:
+                                logging.getLogger(__name__).exception(
+                                    "Flask application recovery processing failed at %s; "
+                                    "monitoring will continue.",
+                                    anomaly.get("timestamp"),
+                                )
+
+        try:
+            from app.recovery_policy import has_recovery_policy
+
+            policy_is_configured = has_recovery_policy(LEGACY_FLASK_APPLICATION_ID)
+        except Exception:
+            logging.getLogger(__name__).exception(
+                "Could not read the Flask recovery policy; legacy automatic "
+                "recovery was withheld."
+            )
+            policy_is_configured = True
+        if policy_is_configured:
+            logging.getLogger(__name__).debug(
+                "Using the configured application recovery policy for Flask."
+            )
+        else:
+            try:
+                automatic_recovery_result = (
+                    self_healing.run_automatic_policy_if_needed(
+                        app_status,
+                        {
+                            "cpu_usage": cpu,
+                            "memory_usage": memory_usage,
+                            "disk_usage": disk_usage,
+                            "response_time_ms": response_time,
+                            "api_error_rate": api_error_rate,
+                        },
+                    )
+                )
+            except (OSError, RuntimeError, csv.Error, psutil.Error, ValueError) as error:
+                print(f"Automatic recovery coordinator failed: {error}")
+            else:
+                if automatic_recovery_result is False:
+                    print("Automatic recovery failed; check the self-healing log.")
+                elif automatic_recovery_result is True:
+                    print("Automatic recovery policy evaluated; check the self-healing log.")
 
         # Display collected information
         print("--------------------------------")
@@ -286,3 +424,5 @@ except KeyboardInterrupt:
 
     print("\nMonitoring stopped.")
     print("Metrics saved at:", CSV_FILE)
+finally:
+    stop_monitoring()

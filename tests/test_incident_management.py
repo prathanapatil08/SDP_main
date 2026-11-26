@@ -178,7 +178,7 @@ class IncidentManagementTests(unittest.TestCase):
     def test_detection_is_opened_before_root_cause_analysis(self):
         metrics = {
             "timestamp": self.report["source_timestamp"],
-            "cpu_usage": 96,
+            "cpu_usage": 99,
             "memory_usage": 70,
             "application_status": "Healthy",
         }
@@ -209,6 +209,36 @@ class IncidentManagementTests(unittest.TestCase):
                 )
             ],
             ["detected", "diagnosed"],
+        )
+
+    def test_high_but_noncritical_cpu_anomaly_is_warning(self):
+        metrics = {
+            "timestamp": self.report["source_timestamp"],
+            "cpu_usage": 94,
+            "memory_usage": 70,
+            "application_status": "Healthy",
+        }
+
+        incident_management.record_anomaly_detection(metrics, self.database)
+
+        self.assertEqual(
+            incident_management.list_incidents(self.database)[0]["severity"],
+            "Warning",
+        )
+
+    def test_resource_at_95_percent_is_critical(self):
+        metrics = {
+            "timestamp": self.report["source_timestamp"],
+            "cpu_usage": 95,
+            "memory_usage": 70,
+            "application_status": "Healthy",
+        }
+
+        incident_management.record_anomaly_detection(metrics, self.database)
+
+        self.assertEqual(
+            incident_management.list_incidents(self.database)[0]["severity"],
+            "Critical",
         )
 
     def test_invalid_status_is_rejected(self):

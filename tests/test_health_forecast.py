@@ -48,7 +48,7 @@ class HealthForecastTests(unittest.TestCase):
 
     def test_already_exceeded_threshold_is_left_to_threshold_alerts(self):
         result = forecast_threshold_crossings(
-            self.readings([80, 82, 84, 86, 88, 90, 92, 94])
+            self.readings([80, 82, 84, 86, 88, 90, 92, 96])
         )
 
         self.assertEqual(result["warnings"], [])

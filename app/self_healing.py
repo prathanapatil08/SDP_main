@@ -20,6 +20,8 @@ if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
 from app import incident_management
+from app.database import LEGACY_FLASK_APPLICATION_ID
+from app.health_policy import RESOURCE_CRITICAL_THRESHOLD
 from app.process_control import project_flask_processes, stop_project_flask
 
 MAIN_FILE = BASE_DIR / "app" / "main.py"
@@ -30,9 +32,9 @@ FLASK_LOG_FILE = BASE_DIR / "logs" / "flask-recovery.log"
 APP_URL = "http://127.0.0.1:5000/health"
 API_URL = "http://127.0.0.1:5000/"
 
-CPU_ALERT_THRESHOLD = 85
-MEMORY_ALERT_THRESHOLD = 90
-DISK_ALERT_THRESHOLD = 90
+CPU_ALERT_THRESHOLD = RESOURCE_CRITICAL_THRESHOLD
+MEMORY_ALERT_THRESHOLD = RESOURCE_CRITICAL_THRESHOLD
+DISK_ALERT_THRESHOLD = RESOURCE_CRITICAL_THRESHOLD
 API_ERROR_THRESHOLD = 5
 API_RESPONSE_THRESHOLD_MS = 1000
 METRICS_MAX_AGE_SECONDS = 30
@@ -352,6 +354,7 @@ def write_log(
             "; ".join(
                 item for item in (policy_decision, verification, escalation) if item
             ),
+            application_id=LEGACY_FLASK_APPLICATION_ID,
         )
 
 
