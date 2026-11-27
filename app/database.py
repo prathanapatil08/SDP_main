@@ -513,6 +513,74 @@ def initialize_database(db_path=None):
                 ON incidents(application_id, status, updated_at);
             CREATE INDEX IF NOT EXISTS incidents_problem_key
                 ON incidents(application_id, problem_key, status);
+
+            CREATE TABLE IF NOT EXISTS discovery_settings (
+                settings_id INTEGER PRIMARY KEY CHECK (settings_id = 1),
+                mode TEXT NOT NULL DEFAULT 'disabled'
+                    CHECK (mode IN ('enabled', 'paused', 'disabled')),
+                automatic_registration INTEGER NOT NULL DEFAULT 0
+                    CHECK (automatic_registration IN (0, 1)),
+                automatic_monitoring INTEGER NOT NULL DEFAULT 0
+                    CHECK (automatic_monitoring IN (0, 1)),
+                updated_at TEXT NOT NULL
+            );
+            INSERT OR IGNORE INTO discovery_settings (settings_id, updated_at)
+                VALUES (1, CURRENT_TIMESTAMP);
+
+            CREATE TABLE IF NOT EXISTS discovery_pairings (
+                pairing_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                pairing_code_hash TEXT NOT NULL UNIQUE,
+                expires_at TEXT NOT NULL,
+                used_at TEXT,
+                created_at TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS discovery_credentials (
+                extension_id TEXT PRIMARY KEY,
+                token_hash TEXT NOT NULL UNIQUE,
+                created_at TEXT NOT NULL,
+                revoked_at TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS discovered_applications (
+                discovery_id TEXT PRIMARY KEY,
+                application_id TEXT REFERENCES applications(application_id)
+                    ON DELETE SET NULL,
+                origin TEXT NOT NULL UNIQUE,
+                hostname TEXT NOT NULL,
+                first_discovered_at TEXT NOT NULL,
+                last_discovered_at TEXT NOT NULL,
+                discovery_source TEXT NOT NULL,
+                registration_status TEXT NOT NULL DEFAULT 'pending_approval'
+                    CHECK (registration_status IN (
+                        'pending_approval', 'registered', 'existing', 'ignored'
+                    )),
+                monitoring_status TEXT NOT NULL DEFAULT 'disabled'
+                    CHECK (monitoring_status IN ('enabled', 'disabled')),
+                user_excluded INTEGER NOT NULL DEFAULT 0
+                    CHECK (user_excluded IN (0, 1))
+            );
+            CREATE INDEX IF NOT EXISTS discovered_applications_status
+                ON discovered_applications(registration_status, last_discovered_at);
+
+            CREATE TABLE IF NOT EXISTS discovery_events (
+                event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                discovery_id TEXT NOT NULL REFERENCES discovered_applications(
+                    discovery_id
+                ) ON DELETE CASCADE,
+                event_type TEXT NOT NULL,
+                occurred_at TEXT NOT NULL,
+                discovery_source TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS discovery_events_timeline
+                ON discovery_events(occurred_at DESC, event_id DESC);
+
+            CREATE TABLE IF NOT EXISTS discovery_exclusions (
+                origin TEXT PRIMARY KEY,
+                hostname TEXT NOT NULL,
+                excluded_at TEXT NOT NULL,
+                restored_at TEXT
+            );
             """
         )
 

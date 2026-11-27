@@ -1,12 +1,13 @@
 
-from pathlib import Path as _Path
-import sys as _sys
+from pathlib import Path
+import sys
 
 import streamlit as st
 
-_PROJECT_ROOT = str(_Path(__file__).resolve().parent.parent)
-if _PROJECT_ROOT not in _sys.path:
-    _sys.path.insert(0, _PROJECT_ROOT)
+PROJECT_ROOT = str(Path(__file__).resolve().parent.parent)
+if PROJECT_ROOT in sys.path:
+    sys.path.remove(PROJECT_ROOT)
+sys.path.insert(0, PROJECT_ROOT)
 
 from dashboard.ops_dashboard import run_dashboard
 

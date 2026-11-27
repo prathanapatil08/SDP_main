@@ -1,13 +1,26 @@
 
+import sys
 import threading
 import time
 from datetime import datetime
+from pathlib import Path
 
 import psutil
 from flask import Flask, g, jsonify, request
 
+PROJECT_ROOT = str(Path(__file__).resolve().parent.parent)
+if PROJECT_ROOT in sys.path:
+    sys.path.remove(PROJECT_ROOT)
+sys.path.insert(0, PROJECT_ROOT)
+
+from app.browser_discovery import browser_discovery
+from app.database import DATABASE_FILE
+
 # Create Flask application
 app = Flask(__name__)
+app.config["SDP_DATABASE_PATH"] = DATABASE_FILE
+app.config["MAX_CONTENT_LENGTH"] = 16 * 1024
+app.register_blueprint(browser_discovery)
 
 _request_metrics_lock = threading.Lock()
 _request_metrics = {

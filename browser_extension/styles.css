@@ -1,0 +1,156 @@
+:root {
+  color-scheme: light;
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: #17243b;
+  background: #f5f7fc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  width: 360px;
+  margin: 0;
+}
+
+main {
+  padding: 18px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.brand-mark {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 13px;
+  color: white;
+  background: linear-gradient(135deg, #5c66e8, #28b7a4);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 16px;
+}
+
+header p,
+.hint {
+  color: #63718a;
+  font-size: 12px;
+}
+
+section {
+  margin-top: 12px;
+  padding: 13px;
+  border: 1px solid #e0e6f0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+h2 {
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+.status-card p {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.status-card p + p {
+  margin-top: 8px;
+}
+
+.label {
+  color: #63718a;
+}
+
+button {
+  min-height: 34px;
+  padding: 7px 10px;
+  border: 1px solid #d5ddec;
+  border-radius: 8px;
+  background: white;
+  color: #263754;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button:hover {
+  border-color: #6875e8;
+}
+
+button.primary {
+  border-color: #5e67df;
+  background: #5e67df;
+  color: white;
+}
+
+button.secondary {
+  width: 100%;
+  margin-top: 8px;
+  border-color: #dce5f4;
+  background: #edf4ff;
+}
+
+.button-row {
+  display: flex;
+  gap: 7px;
+}
+
+.quiet {
+  margin-left: auto;
+}
+
+.hint {
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  color: #63718a;
+  font-size: 11px;
+}
+
+input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #d5ddec;
+  border-radius: 7px;
+}
+
+.privacy p {
+  color: #53627a;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+code {
+  color: #514db9;
+  overflow-wrap: anywhere;
+}
+
+#message {
+  min-height: 16px;
+  margin-top: 10px;
+  color: #4a59bf;
+  font-size: 11px;
+}

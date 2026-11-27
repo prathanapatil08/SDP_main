@@ -139,6 +139,50 @@ state, application health, and process ownership. Recovery attempts, approval
 decisions, verification results, and escalations are retained in the central
 database and incident timeline.
 
+## Browser-based application discovery
+
+The optional Chrome/Edge Manifest V3 extension discovers only the normalized
+origin and hostname of completed top-level HTTP(S) navigations. It does not read
+page content, paths, query strings, cookies, passwords, form values, or
+authentication tokens. Incognito use is disabled. Browser discovery and
+extension consent are both disabled until the user explicitly enables them.
+Manual Application Registry entry remains available.
+
+1. Start the Flask service and dashboard using the local run instructions.
+2. From the repository root, run `python -m app.browser_discovery --pair`.
+   Enter the one-time pairing code printed in the terminal into the extension
+   popup within five minutes.
+3. Open `chrome://extensions` in Chrome or `edge://extensions` in Edge, enable
+   Developer mode, select **Load unpacked**, and choose the
+   `browser_extension` folder.
+4. In the dashboard's **Automatic Application Discovery** page, enable
+   discovery. Then separately enable consent in the extension popup.
+5. In that dashboard page, choose whether discovered sites should be
+   automatically registered and whether registered discovered sites should
+   be monitored. Both settings default to off. When automatic registration is
+   off, new sites remain pending until approved.
+
+The extension requests only `webNavigation` and `storage`, plus access to the
+local Flask API at `127.0.0.1:5000`. Pairing uses a short-lived, single-use
+code; the database stores its hash and the paired extension token hash. The
+token itself is stored in the browser's extension storage. The Flask discovery
+API accepts requests only from loopback and the paired extension origin, and
+limits request rates.
+
+Discovered websites are stored in the existing SQLite application registry as
+external HTTP/HTTPS websites. They never receive process-monitoring or
+automatic-recovery permissions. If authorized, the existing multi-application
+monitor checks the site's origin no more often than every five minutes. These
+are unauthenticated GET requests with a five-second timeout; redirects and
+private/non-public network targets are blocked. No crawling or security
+scanning is performed. Sites that require a logged-in session may appear
+unavailable because the monitor does not use browser credentials.
+
+Discovery can be paused or disabled from either the dashboard or extension.
+Excluded origins remain in the audit history but are not rediscovered or
+monitored until restored. The dashboard shows discovered origins and event
+history; it never stores full browser URLs.
+
 ## Deploy the dashboard on Streamlit Community Cloud
 
 1. Open the repository in Streamlit Community Cloud.

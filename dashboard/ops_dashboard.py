@@ -3,7 +3,7 @@ import json
 import math
 import sqlite3
 from contextlib import closing
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import altair as alt
@@ -11,6 +11,16 @@ import pandas as pd
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 
+from app.browser_discovery import (
+    approve_discovery,
+    configure_discovery,
+    exclude_discovery,
+    get_discovery_history,
+    get_discovery_settings,
+    ignore_discovery,
+    list_discovered_applications,
+    restore_discovery,
+)
 from app.database import connect
 from app.health_forecast import forecast_threshold_crossings
 from testing_website.demo_app import DEMO_APPLICATIONS
@@ -25,6 +35,7 @@ ACTIVE_INCIDENT_STATUSES = {"Open", "Acknowledged", "Investigating", "Monitoring
 PAGES = (
     "Overview Dashboard",
     "Application Registry",
+    "Automatic Application Discovery",
     "Multi-Application Monitoring",
     "Performance Analytics",
     "AI Anomaly Detection",
@@ -39,6 +50,7 @@ PAGES = (
 PAGE_ICONS = {
     "Overview Dashboard": "✦",
     "Application Registry": "◈",
+    "Automatic Application Discovery": "⌕",
     "Multi-Application Monitoring": "◉",
     "Performance Analytics": "⌁",
     "AI Anomaly Detection": "✳",
@@ -774,6 +786,230 @@ def render_registry(snapshot, include_simulated):
                     f'<div class="app-card-url">Routes: {_escape(", ".join(definition["paths"]))}</div></div>',
                     unsafe_allow_html=True,
                 )
+
+
+def render_browser_discovery():
+    settings = get_discovery_settings(DATABASE_FILE)
+    discoveries = list_discovered_applications(
+        db_path=DATABASE_FILE,
+        include_excluded=True,
+    )
+    history = get_discovery_history(200, db_path=DATABASE_FILE)
+    excluded = [row for row in discoveries if row["excluded_at"]]
+    pending = [
+        row
+        for row in discoveries
+        if row["registration_status"] == "pending_approval"
+        and not row["excluded_at"]
+    ]
+    recent_cutoff = (
+        datetime.now(timezone.utc) - timedelta(days=1)
+    ).isoformat()
+    newly_discovered = sum(
+        row["first_discovered_at"] >= recent_cutoff for row in discoveries
+    )
+    monitored = sum(
+        row["monitoring_status"] == "enabled" and not row["excluded_at"]
+        for row in discoveries
+    )
+
+    _render_hero(
+        "Automatic application discovery",
+        "Discover website origins from opted-in top-level browser visits and reuse the existing application registry and monitors.",
+        f"{len(discoveries)} DISCOVERED",
+    )
+    st.info(
+        "Privacy: the paired extension submits only a normalized HTTP(S) origin "
+        "and hostname. It does not collect page content, URL paths, search "
+        "terms, cookies, passwords, form data, or authentication tokens. "
+        "Private browsing is disabled."
+    )
+    status_columns = st.columns(5)
+    for column, label, value in zip(
+        status_columns,
+        (
+            "Discovery status",
+            "Discovered websites",
+            "New in the last 24 hours",
+            "Monitored websites",
+            "Awaiting registration",
+        ),
+        (
+            settings["mode"].capitalize(),
+            len(discoveries),
+            newly_discovered,
+            monitored,
+            len(pending),
+        ),
+    ):
+        with column:
+            _kpi(label, value, "Saved discovery state", "◉", ACCENTS[0])
+
+    _section_heading(
+        "Discovery controls",
+        "Discovery starts disabled. Enable it here and separately enable consent in the browser-extension popup.",
+    )
+    mode_columns = st.columns(3)
+    for column, label, mode in zip(
+        mode_columns,
+        ("Enable discovery", "Pause discovery", "Disable discovery"),
+        ("enabled", "paused", "disabled"),
+    ):
+        with column:
+            if st.button(
+                label,
+                key=f"discovery_mode_{mode}",
+                type="primary" if settings["mode"] == mode else "secondary",
+                use_container_width=True,
+            ):
+                try:
+                    configure_discovery(mode=mode, db_path=DATABASE_FILE)
+                    st.cache_data.clear()
+                    st.rerun()
+                except (OSError, RuntimeError, ValueError, sqlite3.Error) as error:
+                    st.error(f"Could not update discovery mode: {error}")
+
+    with st.form("browser_discovery_preferences"):
+        automatic_registration = st.checkbox(
+            "Automatically register eligible newly discovered websites",
+            value=bool(settings["automatic_registration"]),
+        )
+        automatic_monitoring = st.checkbox(
+            "Automatically monitor registered discovered websites",
+            value=bool(settings["automatic_monitoring"]),
+            help=(
+                "Monitoring makes unauthenticated, rate-limited HTTP(S) "
+                "requests to the origin. Private network targets and redirects "
+                "are blocked for browser-discovered applications."
+            ),
+        )
+        if st.form_submit_button("Save discovery preferences"):
+            try:
+                configure_discovery(
+                    automatic_registration=automatic_registration,
+                    automatic_monitoring=automatic_monitoring,
+                    db_path=DATABASE_FILE,
+                )
+                st.cache_data.clear()
+                st.rerun()
+            except (OSError, RuntimeError, ValueError, sqlite3.Error) as error:
+                st.error(f"Could not save discovery preferences: {error}")
+
+    with st.expander("Connect Chrome or Edge extension", expanded=False):
+        st.markdown(
+            "1. Start the Flask service on this computer at "
+            "`http://127.0.0.1:5000`.\n"
+            "2. From the project root, run "
+            "`python -m app.browser_discovery --pair` and enter the printed "
+            "one-time code in the extension popup within five minutes.\n"
+            "3. Load the `browser_extension` folder using the browser's "
+            "**Load unpacked** extension option, then enable consent in its popup."
+        )
+        st.caption(
+            "Pairing codes are single-use, short-lived, and stored only as "
+            "hashes. The extension token is kept in browser extension storage."
+        )
+
+    _section_heading(
+        "Discovered websites",
+        "A website is registered only when automatic registration is enabled or an operator approves it.",
+    )
+    if not discoveries:
+        _empty(
+            "No websites discovered",
+            "No browser-origin events have been accepted. The initial setting is disabled.",
+        )
+    for row in discoveries:
+        with st.container(border=True):
+            columns = st.columns([1.5, 1, 1, 1, 1.4])
+            with columns[0]:
+                st.markdown(f"### {_escape(row['hostname'])}")
+                st.caption(_escape(row["origin"]))
+            with columns[1]:
+                st.caption("Registration")
+                st.markdown(f"**{_escape(row['registration_status'])}**")
+            with columns[2]:
+                st.caption("Monitoring")
+                st.markdown(
+                    f"**{'Excluded' if row['excluded_at'] else _escape(row['monitoring_status'])}**"
+                )
+            with columns[3]:
+                st.caption("First discovered")
+                st.markdown(f"**{_time_label(row['first_discovered_at'])}**")
+            with columns[4]:
+                st.caption("Last discovered")
+                st.markdown(f"**{_time_label(row['last_discovered_at'])}**")
+
+            action_columns = st.columns(3)
+            if (
+                row["registration_status"] == "pending_approval"
+                and not row["excluded_at"]
+            ):
+                with action_columns[0]:
+                    if st.button(
+                        "Approve and register",
+                        key=f"discovery_approve_{row['discovery_id']}",
+                    ):
+                        try:
+                            approve_discovery(row["origin"], db_path=DATABASE_FILE)
+                            st.cache_data.clear()
+                            st.rerun()
+                        except (OSError, RuntimeError, ValueError, sqlite3.Error) as error:
+                            st.error(f"Could not approve this website: {error}")
+                with action_columns[1]:
+                    if st.button(
+                        "Ignore",
+                        key=f"discovery_ignore_{row['discovery_id']}",
+                    ):
+                        try:
+                            ignore_discovery(row["origin"], db_path=DATABASE_FILE)
+                            st.cache_data.clear()
+                            st.rerun()
+                        except (OSError, RuntimeError, ValueError, sqlite3.Error) as error:
+                            st.error(f"Could not ignore this website: {error}")
+            if row["excluded_at"]:
+                with action_columns[2]:
+                    if st.button(
+                        "Restore website",
+                        key=f"discovery_restore_{row['discovery_id']}",
+                    ):
+                        try:
+                            restore_discovery(row["origin"], db_path=DATABASE_FILE)
+                            st.cache_data.clear()
+                            st.rerun()
+                        except (OSError, RuntimeError, ValueError, sqlite3.Error) as error:
+                            st.error(f"Could not restore this website: {error}")
+            elif row["registration_status"] in {"registered", "existing"}:
+                with action_columns[2]:
+                    if st.button(
+                        "Exclude website",
+                        key=f"discovery_exclude_{row['discovery_id']}",
+                    ):
+                        try:
+                            exclude_discovery(row["origin"], db_path=DATABASE_FILE)
+                            st.cache_data.clear()
+                            st.rerun()
+                        except (OSError, RuntimeError, ValueError, sqlite3.Error) as error:
+                            st.error(f"Could not exclude this website: {error}")
+
+    _section_heading("Discovery history", "Origin-level events only; full browsing URLs are never stored.")
+    if history:
+        st.dataframe(
+            [
+                {
+                    "Time": _time_label(row["occurred_at"]),
+                    "Website": row["hostname"],
+                    "Origin": row["origin"],
+                    "Event": row["event_type"],
+                    "Source": row["discovery_source"],
+                }
+                for row in history
+            ],
+            hide_index=True,
+            use_container_width=True,
+        )
+    else:
+        _empty("No discovery events", "Accepted discovery events will appear here.")
 
 
 def render_multi_monitoring(snapshot, include_simulated):
@@ -1594,7 +1830,7 @@ def run_dashboard():
         value=False,
         help="Operational pages exclude simulated records by default. The Simulation Lab always shows simulation history.",
     )
-    st.sidebar.caption("Read-only console · refreshes every 15 seconds")
+    st.sidebar.caption("Operations console · refreshes every 15 seconds")
     st.sidebar.caption("Source: project SQLite database and local monitor")
 
     st_autorefresh(interval=REFRESH_INTERVAL_MS, key="ops_dashboard_refresh")
@@ -1625,6 +1861,7 @@ def run_dashboard():
     page_renderers = {
         "Overview Dashboard": lambda: render_overview(snapshot, system_metrics, include_simulated),
         "Application Registry": lambda: render_registry(snapshot, include_simulated),
+        "Automatic Application Discovery": render_browser_discovery,
         "Multi-Application Monitoring": lambda: render_multi_monitoring(snapshot, include_simulated),
         "Performance Analytics": lambda: render_performance(snapshot, system_metrics, include_simulated),
         "AI Anomaly Detection": lambda: render_anomalies(snapshot, include_simulated),

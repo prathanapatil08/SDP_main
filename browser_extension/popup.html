@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SDP Website Discovery</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="brand-mark">S</div>
+        <div>
+          <h1>SDP AIOps</h1>
+          <p>Website discovery</p>
+        </div>
+      </header>
+
+      <section class="status-card" aria-live="polite">
+        <p><span class="label">Extension</span><strong id="consent-status">Checking…</strong></p>
+        <p><span class="label">Local backend</span><strong id="backend-status">Checking…</strong></p>
+        <p><span class="label">Latest result</span><strong id="last-result">—</strong></p>
+      </section>
+
+      <section class="controls">
+        <h2>Browser discovery</h2>
+        <div class="button-row">
+          <button id="enable" class="primary">Enable</button>
+          <button id="pause">Pause</button>
+          <button id="disable" class="quiet">Disable</button>
+        </div>
+        <p class="hint">Discovery also must be enabled in the SDP dashboard.</p>
+      </section>
+
+      <section class="pairing">
+        <h2>Connect to this computer</h2>
+        <label for="pairing-code">One-time pairing code</label>
+        <input id="pairing-code" type="password" autocomplete="off" spellcheck="false">
+        <button id="pair" class="secondary">Pair extension</button>
+        <p class="hint">Generate a code locally with <code>python -m app.browser_discovery --pair</code>.</p>
+      </section>
+
+      <section class="privacy">
+        <h2>Privacy</h2>
+        <p>Only the site origin and hostname are sent after top-level navigation. Page content, paths, searches, cookies, passwords, forms, and login tokens are not collected. Private browsing is disabled.</p>
+      </section>
+      <p id="message" role="status"></p>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

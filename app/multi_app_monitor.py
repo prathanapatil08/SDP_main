@@ -267,7 +267,19 @@ class ApplicationMonitor:
                 headers={"User-Agent": "SDP-AIOps-Monitor/1.0"},
                 method="GET",
             )
-            with self.request_function(
+            request_function = self.request_function
+            if request_function is urlopen:
+                from app.browser_discovery import (
+                    is_browser_discovered_application,
+                    safe_discovery_urlopen,
+                )
+
+                if is_browser_discovered_application(
+                    application["application_id"],
+                    db_path=self.db_path,
+                ):
+                    request_function = safe_discovery_urlopen
+            with request_function(
                 request,
                 timeout=self.request_timeout,
             ) as response:
