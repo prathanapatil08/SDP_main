@@ -20,6 +20,15 @@
         <p><span class="label">Extension</span><strong id="consent-status">Checking…</strong></p>
         <p><span class="label">Local backend</span><strong id="backend-status">Checking…</strong></p>
         <p><span class="label">Latest result</span><strong id="last-result">—</strong></p>
+        <p><span class="label">Open-tab scan</span><strong id="open-tabs-result">Not scanned</strong></p>
+        <p><span class="label">Page metrics</span><strong id="page-metrics-status">Disabled</strong></p>
+        <p><span class="label">Latest page metric</span><strong id="last-page-metrics-result">—</strong></p>
+      </section>
+
+      <section class="controls">
+        <h2>Currently open websites</h2>
+        <button id="scan-open-tabs" class="secondary" disabled>Scan tabs in this browser profile</button>
+        <p class="hint">A scan is manual. Chrome will ask for optional tab access; only HTTP(S) site origins and tab counts are sent. Page paths and content are excluded.</p>
       </section>
 
       <section class="controls">
@@ -32,6 +41,15 @@
         <p class="hint">Discovery also must be enabled in the SDP dashboard.</p>
       </section>
 
+      <section class="controls">
+        <h2>Per-website measurements</h2>
+        <div class="button-row">
+          <button id="enable-page-metrics" class="secondary" disabled>Authorize monitored websites</button>
+          <button id="disable-page-metrics" class="quiet" disabled>Disable measurements</button>
+        </div>
+        <p class="hint">Page metrics are off by default. Chrome will ask for access to each registered, monitored website before collection begins. Background tabs may report less often because browsers throttle their timers.</p>
+      </section>
+
       <section class="pairing">
         <h2>Connect to this computer</h2>
         <label for="pairing-code">One-time pairing code</label>
@@ -42,7 +60,7 @@
 
       <section class="privacy">
         <h2>Privacy</h2>
-        <p>Only the site origin and hostname are sent after top-level navigation. Page content, paths, searches, cookies, passwords, forms, and login tokens are not collected. Private browsing is disabled.</p>
+        <p>Discovery sends only a site origin and hostname. Page measurements are separately opt-in and limited to monitored websites you authorize. They send the origin, JavaScript heap usage when available, and 30-second main-thread long-task counts and duration. Page paths, content, cookies, passwords, forms, and login tokens are not collected. These values are not total website RAM or CPU. Private browsing is disabled.</p>
       </section>
       <p id="message" role="status"></p>
     </main>

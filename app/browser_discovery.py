@@ -39,6 +39,7 @@ REQUEST_LIMIT = 60
 REQUEST_WINDOW_SECONDS = 60
 PAIRING_LIMIT = 5
 PAIRING_WINDOW_SECONDS = 300
+MAX_OPEN_TABS = 1000
 _EXTENSION_ORIGIN = re.compile(r"^chrome-extension://([a-p]{32})$")
 _rate_lock = threading.Lock()
 _rate_hits = defaultdict(deque)
@@ -150,10 +151,12 @@ def _local_request():
         port = parsed_host.port
     except ValueError:
         return False
-    return is_loopback and host in {"127.0.0.1", "localhost"} and port in {
-        None,
-        5000,
-    }
+    configured_port = current_app.config.get("SDP_PORT", 5000)
+    return (
+        is_loopback
+        and host in {"127.0.0.1", "localhost"}
+        and port in {None, configured_port}
+    )
 
 
 def _paired_extension_id(db_path=None):
@@ -492,6 +495,91 @@ def get_discovery_history(limit=200, db_path=None):
             ORDER BY e.occurred_at DESC, e.event_id DESC LIMIT ?
             """,
             (limit,),
+        ).fetchall()
+    return [dict(row) for row in rows]
+
+
+def _is_nonpublic_tab_host(value):
+    if not isinstance(value, str):
+        return False
+    try:
+        parsed = urlsplit(value)
+        if parsed.scheme.casefold() not in {"http", "https"} or not parsed.netloc:
+            return False
+        hostname = (parsed.hostname or "").rstrip(".").casefold()
+    except ValueError:
+        return False
+    if (
+        hostname == "localhost"
+        or hostname.endswith((".localhost", ".local", ".internal"))
+    ):
+        return True
+    try:
+        return not ipaddress.ip_address(hostname).is_global
+    except ValueError:
+        return False
+
+
+def record_open_tabs(origins, extension_id, db_path=None):
+    if not isinstance(origins, list) or len(origins) > MAX_OPEN_TABS:
+        raise ValueError(f"Open-tab scans must contain at most {MAX_OPEN_TABS} origins.")
+    if _extension_id(f"chrome-extension://{extension_id}") is None:
+        raise ValueError("A valid paired browser extension is required.")
+    if get_discovery_settings(db_path)["mode"] != "enabled":
+        raise DiscoveryDisabledError("Browser discovery is not enabled.")
+
+    counts = {}
+    skipped_private = 0
+    for value in origins:
+        try:
+            origin, hostname = normalize_origin(value)
+        except ValueError as error:
+            if _is_nonpublic_tab_host(value):
+                skipped_private += 1
+                continue
+            raise
+        item = counts.setdefault(origin, {"hostname": hostname, "tab_count": 0})
+        item["tab_count"] += 1
+
+    for origin in counts:
+        discover_website(
+            origin,
+            discovery_source="browser_open_tabs",
+            db_path=db_path,
+        )
+
+    scanned_at = _timestamp()
+    with closing(connect(db_path)) as connection, connection:
+        connection.execute("DELETE FROM browser_open_tabs")
+        connection.executemany(
+            """
+            INSERT INTO browser_open_tabs (
+                extension_id, origin, hostname, tab_count, scanned_at
+            ) VALUES (?, ?, ?, ?, ?)
+            """,
+            [
+                (extension_id, origin, item["hostname"], item["tab_count"], scanned_at)
+                for origin, item in counts.items()
+            ],
+        )
+    return {
+        "accepted": True,
+        "website_count": len(counts),
+        "tab_count": len(origins),
+        "skipped_private": skipped_private,
+        "scanned_at": scanned_at,
+    }
+
+
+def list_open_tabs(db_path=None):
+    initialize_database(db_path)
+    with closing(connect(db_path)) as connection:
+        rows = connection.execute(
+            """
+            SELECT origin, hostname, tab_count, scanned_at
+            FROM browser_open_tabs
+            ORDER BY hostname COLLATE NOCASE, origin
+            """
         ).fetchall()
     return [dict(row) for row in rows]
 
@@ -942,6 +1030,8 @@ def _json_body():
 @browser_discovery.before_request
 def _authorize_discovery_request():
     db_path = _request_db_path()
+    if request.endpoint == "browser_discovery.open_tabs_route":
+        request.max_content_length = 256 * 1024
     if not _local_request():
         return jsonify(error="Discovery API is available only on localhost."), 403
 
@@ -1024,6 +1114,35 @@ def register_route():
         )
     except DiscoveryDisabledError as error:
         return jsonify(error=str(error)), 409
+    except ValueError as error:
+        return jsonify(error=str(error)), 400
+    return jsonify(result)
+
+
+@browser_discovery.route("/api/discovery/open-tabs", methods=["POST", "OPTIONS"])
+def open_tabs_route():
+    try:
+        result = record_open_tabs(
+            _json_body().get("origins"),
+            _extension_id(request.headers.get("Origin")),
+            db_path=_request_db_path(),
+        )
+    except DiscoveryDisabledError as error:
+        return jsonify(error=str(error)), 409
+    except ValueError as error:
+        return jsonify(error=str(error)), 400
+    return jsonify(result)
+
+
+@browser_discovery.route("/api/discovery/page-metrics", methods=["POST", "OPTIONS"])
+def page_metrics_route():
+    from app.browser_page_metrics import store_browser_page_metrics
+
+    try:
+        result = store_browser_page_metrics(
+            _json_body(),
+            db_path=_request_db_path(),
+        )
     except ValueError as error:
         return jsonify(error=str(error)), 400
     return jsonify(result)

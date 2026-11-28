@@ -196,6 +196,7 @@ def _recent_telemetry(
             """
             SELECT timestamp, data_json FROM application_telemetry
             WHERE application_id = ?
+              AND source != 'browser_page_metrics'
               AND (? = 1 OR is_simulated = 0)
             ORDER BY timestamp DESC LIMIT ?
             """,

@@ -563,6 +563,17 @@ def initialize_database(db_path=None):
             CREATE INDEX IF NOT EXISTS discovered_applications_status
                 ON discovered_applications(registration_status, last_discovered_at);
 
+            CREATE TABLE IF NOT EXISTS browser_open_tabs (
+                extension_id TEXT NOT NULL,
+                origin TEXT NOT NULL,
+                hostname TEXT NOT NULL,
+                tab_count INTEGER NOT NULL CHECK (tab_count > 0),
+                scanned_at TEXT NOT NULL,
+                PRIMARY KEY (extension_id, origin)
+            );
+            CREATE INDEX IF NOT EXISTS browser_open_tabs_scanned
+                ON browser_open_tabs(scanned_at DESC);
+
             CREATE TABLE IF NOT EXISTS discovery_events (
                 event_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 discovery_id TEXT NOT NULL REFERENCES discovered_applications(

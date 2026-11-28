@@ -5,10 +5,18 @@
   "description": "Opt-in discovery of website origins for the local SDP AIOps platform.",
   "permissions": [
     "webNavigation",
-    "storage"
+    "storage",
+    "scripting"
+  ],
+  "optional_permissions": [
+    "tabs"
   ],
   "host_permissions": [
-    "http://127.0.0.1:5000/*"
+    "http://127.0.0.1:5001/*"
+  ],
+  "optional_host_permissions": [
+    "http://*/*",
+    "https://*/*"
   ],
   "background": {
     "service_worker": "background.js"

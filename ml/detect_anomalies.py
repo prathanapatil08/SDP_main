@@ -311,6 +311,7 @@ class ApplicationAnomalyDetector:
                 SELECT application_id, timestamp, data_json, is_simulated
                 FROM application_telemetry
                 WHERE application_id = ?
+                  AND source != 'browser_page_metrics'
                   AND (? = 1 OR is_simulated = 0)
                 ORDER BY timestamp
                 """,

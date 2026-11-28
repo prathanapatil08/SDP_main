@@ -74,7 +74,10 @@ def _load_application_evidence(
     db_path,
     include_simulated=False,
 ):
-    telemetry_filter = "AND (? = 1 OR is_simulated = 0)"
+    telemetry_filter = (
+        "AND source != 'browser_page_metrics' "
+        "AND (? = 1 OR is_simulated = 0)"
+    )
     with closing(connect(db_path)) as connection:
         if source_timestamp is None:
             telemetry_rows = connection.execute(
@@ -203,7 +206,8 @@ def _latest_dependency_health(dependency_id, source_time, lookback, db_path):
             """
             SELECT timestamp, data_json
             FROM application_telemetry
-            WHERE application_id = ? AND is_simulated = 0 AND timestamp <= ?
+            WHERE application_id = ? AND is_simulated = 0
+              AND source != 'browser_page_metrics' AND timestamp <= ?
             ORDER BY timestamp DESC
             LIMIT 1
             """,

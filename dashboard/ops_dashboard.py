@@ -19,8 +19,10 @@ from app.browser_discovery import (
     get_discovery_settings,
     ignore_discovery,
     list_discovered_applications,
+    list_open_tabs,
     restore_discovery,
 )
+from app.browser_process_metrics import sample_chrome_process_metrics
 from app.database import connect
 from app.health_forecast import forecast_threshold_crossings
 from testing_website.demo_app import DEMO_APPLICATIONS
@@ -253,6 +255,8 @@ def _app_names(snapshot):
 def _latest_readings(snapshot, include_simulated=True):
     latest = {}
     for row in snapshot["telemetry"]:
+        if row.get("source") == "browser_page_metrics":
+            continue
         if not include_simulated and row.get("is_simulated"):
             continue
         latest.setdefault(row["application_id"], row)
@@ -407,6 +411,7 @@ def _application_telemetry(snapshot, application_id, include_simulated):
         row
         for row in snapshot["telemetry"]
         if row["application_id"] == application_id
+        and row.get("source") != "browser_page_metrics"
         and (include_simulated or not row.get("is_simulated"))
     ]
     rows.reverse()
@@ -572,6 +577,79 @@ def _application_rows(snapshot, include_simulated):
     return output
 
 
+def _browser_page_metric_rows(snapshot, selected_origin="All websites"):
+    latest = {}
+    for row in snapshot["telemetry"]:
+        if row.get("source") != "browser_page_metrics":
+            continue
+        data = row.get("data") or {}
+        origin = data.get("origin")
+        if not isinstance(origin, str) or not origin:
+            continue
+        if selected_origin != "All websites" and origin != selected_origin:
+            continue
+        latest.setdefault(origin, (row, data))
+
+    output = []
+    for origin, (row, data) in sorted(
+        latest.items(),
+        key=lambda item: (
+            str(item[1][0].get("timestamp") or ""),
+            str(item[1][1].get("hostname") or item[0]).casefold(),
+        ),
+        reverse=True,
+    ):
+        heap_value = _number(data.get("javascript_heap_used_bytes"))
+        count_value = data.get("long_task_count")
+        duration_value = _number(data.get("total_long_task_duration_ms"))
+        heap_available = (
+            data.get("javascript_heap_available") is True
+            and heap_value is not None
+            and heap_value >= 0
+        )
+        tasks_available = (
+            data.get("long_tasks_available") is True
+            and isinstance(count_value, int)
+            and not isinstance(count_value, bool)
+            and count_value >= 0
+            and duration_value is not None
+            and duration_value >= 0
+        )
+        output.append({
+            "Website hostname": data.get("hostname") or origin,
+            "JavaScript heap usage": (
+                f"{_metric_text(heap_value / (1024 * 1024), ' MiB')}"
+                if heap_available
+                else "Unavailable"
+            ),
+            "Long-task count": (
+                _metric_text(count_value, precision=0)
+                if tasks_available
+                else "Unavailable"
+            ),
+            "Total long-task duration": (
+                _metric_text(duration_value, " ms")
+                if tasks_available
+                else "Unavailable"
+            ),
+            "Long-task measurement window": (
+                f"{_metric_text(data.get('measurement_interval_seconds'), ' seconds')}"
+                if tasks_available
+                and _number(data.get("measurement_interval_seconds")) is not None
+                else "Unavailable"
+            ),
+            "Last measurement time": _time_label(
+                data.get("timestamp") or row.get("timestamp")
+            ),
+            "Measurement availability": (
+                f"JavaScript heap: {'Available' if heap_available else 'Unavailable'}; "
+                f"long tasks: {'Available' if tasks_available else 'Unavailable'}"
+            ),
+            "_origin": origin,
+        })
+    return output
+
+
 def _render_hero(title, subtitle, right_label=None):
     label = (
         f'<span class="hero-chip">● {_escape(right_label)}</span>'
@@ -660,6 +738,76 @@ def render_overview(snapshot, system_metrics, include_simulated):
     for column, card in zip(metric_cols, system_cards):
         with column:
             _kpi(*card)
+
+    _section_heading(
+        "Browser resource usage",
+        "Current CPU and memory totals for this user's Chrome processes, across all tabs.",
+    )
+    browser_metrics = sample_chrome_process_metrics()
+    if browser_metrics["error"]:
+        st.info(browser_metrics["error"])
+    browser_cols = st.columns(3)
+    browser_memory = (
+        f"{_metric_text(browser_metrics['memory_mib'], ' MiB')} "
+        f"({_metric_text(browser_metrics['memory_percent'], '%')})"
+        if browser_metrics["memory_mib"] is not None
+        else "—"
+    )
+    browser_cards = (
+        ("Chrome CPU", _metric_text(browser_metrics["cpu_percent"], "%"), "All tabs · percent of host CPU", "▦", ACCENTS[0]),
+        ("Chrome memory", browser_memory, "All tabs · resident memory", "▤", ACCENTS[3]),
+        ("Chrome processes", str(browser_metrics["process_count"]), "Current-user Chrome processes", "◈", ACCENTS[1]),
+    )
+    for column, card in zip(browser_cols, browser_cards):
+        with column:
+            _kpi(*card)
+    if browser_metrics["warning"]:
+        st.caption(browser_metrics["warning"])
+
+    _section_heading(
+        "Browser Page Metrics",
+        "Latest periodic reading from an authorized tab per website; values are not combined across tabs. JavaScript heap is not total website RAM, and long-task duration is not CPU usage.",
+    )
+    page_metric_rows = _browser_page_metric_rows(snapshot)
+    if page_metric_rows:
+        origins = sorted(
+            {row["_origin"] for row in page_metric_rows},
+            key=lambda value: value.casefold(),
+        )
+        selected_origin = st.selectbox(
+            "Filter browser page metrics by website",
+            ["All websites", *origins],
+            format_func=lambda value: (
+                value
+                if value == "All websites"
+                else next(
+                    (
+                        row["Website hostname"]
+                        for row in page_metric_rows
+                        if row["_origin"] == value
+                    ),
+                    value,
+                )
+            ),
+            key="browser_page_metrics_origin",
+        )
+        visible_page_metrics = _browser_page_metric_rows(
+            snapshot,
+            selected_origin,
+        )
+        _table(
+            pd.DataFrame([
+                {key: value for key, value in row.items() if not key.startswith("_")}
+                for row in visible_page_metrics
+            ]),
+            "No browser page metrics",
+            "No page measurements have been received for this website.",
+        )
+    else:
+        _empty(
+            "No browser page measurements",
+            "Authorize monitored websites in the browser-extension popup to begin collecting page-level readings.",
+        )
 
     left, right = st.columns([1.55, 1])
     with left:
@@ -794,7 +942,15 @@ def render_browser_discovery():
         db_path=DATABASE_FILE,
         include_excluded=True,
     )
+    open_tabs = list_open_tabs(db_path=DATABASE_FILE)
     history = get_discovery_history(200, db_path=DATABASE_FILE)
+    with closing(connect(DATABASE_FILE)) as connection:
+        paired = connection.execute(
+            """
+            SELECT 1 FROM discovery_credentials
+            WHERE revoked_at IS NULL LIMIT 1
+            """
+        ).fetchone() is not None
     excluded = [row for row in discoveries if row["excluded_at"]]
     pending = [
         row
@@ -824,6 +980,16 @@ def render_browser_discovery():
         "terms, cookies, passwords, form data, or authentication tokens. "
         "Private browsing is disabled."
     )
+    if paired:
+        st.success(
+            "An extension pairing credential is stored. Check the extension "
+            "popup to confirm its live backend connection."
+        )
+    else:
+        st.error(
+            "Browser extension is not paired. Generate a pairing code below "
+            "and enter it in the extension popup."
+        )
     status_columns = st.columns(5)
     for column, label, value in zip(
         status_columns,
@@ -897,9 +1063,9 @@ def render_browser_discovery():
 
     with st.expander("Connect Chrome or Edge extension", expanded=False):
         st.markdown(
-            "1. Start the Flask service on this computer at "
-            "`http://127.0.0.1:5000`.\n"
-            "2. From the project root, run "
+            "1. Start Flask from the sdpmain project on port 5001 "
+            "(PowerShell: `$env:SDP_PORT=5001; python app/main.py`).\n"
+            "2. From the sdpmain project root, run "
             "`python -m app.browser_discovery --pair` and enter the printed "
             "one-time code in the extension popup within five minutes.\n"
             "3. Load the `browser_extension` folder using the browser's "
@@ -908,6 +1074,37 @@ def render_browser_discovery():
         st.caption(
             "Pairing codes are single-use, short-lived, and stored only as "
             "hashes. The extension token is kept in browser extension storage."
+        )
+        st.markdown(
+            "After pairing, enable discovery in both places. In the extension "
+            "popup, choose **Scan tabs in this browser profile** and grant the optional tab "
+            "access when Chrome asks. Only HTTP(S) origins and tab counts are "
+            "saved; internal browser pages, local/private hosts, and page "
+            "paths are skipped."
+        )
+
+    _section_heading(
+        "Currently open websites",
+        "Last on-demand scan of HTTP(S) tabs in the paired browser profile. This is not a live tab feed.",
+    )
+    if open_tabs:
+        _table(
+            pd.DataFrame([
+                {
+                    "Website": row["hostname"],
+                    "Origin": row["origin"],
+                    "Open tabs": row["tab_count"],
+                    "Last scanned": _time_label(row["scanned_at"]),
+                }
+                for row in open_tabs
+            ]),
+            "No open websites",
+            "The latest scan contained no HTTP(S) website tabs.",
+        )
+    else:
+        _empty(
+            "No open-tab scan yet",
+            "Pair the extension, enable discovery, and choose Scan all open tabs in its popup.",
         )
 
     _section_heading(
@@ -1056,6 +1253,43 @@ def render_multi_monitoring(snapshot, include_simulated):
     for col, card in zip(cols, cards):
         with col:
             _kpi(*card)
+    if str(app_row.get("application_type") or "").upper() in {
+        "HTTP_WEBSITE",
+        "HTTPS_WEBSITE",
+    }:
+        browser_metrics = sample_chrome_process_metrics()
+        st.markdown("")
+        _section_heading(
+            "Chrome process group (all tabs)",
+            "Current sample across this user's Chrome processes (all tabs); not attributable to the selected website.",
+        )
+        if browser_metrics["error"]:
+            st.info(browser_metrics["error"])
+        chrome_cpu, chrome_memory = st.columns(2)
+        memory_value = (
+            f"{_metric_text(browser_metrics['memory_mib'], ' MiB')}"
+            f" ({_metric_text(browser_metrics['memory_percent'], '%')})"
+            if browser_metrics["memory_mib"] is not None
+            else "—"
+        )
+        with chrome_cpu:
+            _kpi(
+                "Chrome CPU",
+                _metric_text(browser_metrics["cpu_percent"], "%"),
+                "All tabs · percent of total host CPU",
+                "▦",
+                ACCENTS[0],
+            )
+        with chrome_memory:
+            _kpi(
+                "Chrome memory",
+                memory_value,
+                f"{browser_metrics['process_count']} current-user Chrome process(es) · all tabs",
+                "▤",
+                ACCENTS[3],
+            )
+        if browser_metrics["warning"]:
+            st.caption(browser_metrics["warning"])
     st.markdown("")
     frame = pd.DataFrame(readings)
     left, right = st.columns([1.4, 1])

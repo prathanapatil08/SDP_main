@@ -1,4 +1,5 @@
 
+import os
 import sys
 import threading
 import time
@@ -19,6 +20,7 @@ from app.database import DATABASE_FILE
 # Create Flask application
 app = Flask(__name__)
 app.config["SDP_DATABASE_PATH"] = DATABASE_FILE
+app.config["SDP_PORT"] = int(os.environ.get("SDP_PORT", "5000"))
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024
 app.register_blueprint(browser_discovery)
 
@@ -99,6 +101,6 @@ def health():
 if __name__ == "__main__":
     app.run(
         host="127.0.0.1",
-        port=5000,
+        port=app.config["SDP_PORT"],
         debug=False
     )

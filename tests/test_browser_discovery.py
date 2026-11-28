@@ -19,6 +19,7 @@ from app.browser_discovery import (
     get_discovery_settings,
     ignore_discovery,
     list_discovered_applications,
+    list_open_tabs,
     normalize_origin,
     pair_extension,
     restore_discovery,
@@ -270,6 +271,72 @@ class BrowserDiscoveryTests(unittest.TestCase):
             ).fetchone()["origin"]
         self.assertEqual(stored, "https://youtube.example.test")
 
+    def test_open_tab_scan_discovers_and_counts_only_canonical_origins(self):
+        token = self.pair()
+        self.enable_discovery(automatic_registration=True, automatic_monitoring=True)
+        response = self.authorized_post(
+            "/api/discovery/open-tabs",
+            token,
+            {
+                "origins": [
+                    "https://one.example.test",
+                    "https://two.example.test",
+                    "https://one.example.test",
+                ],
+            },
+        )
+        self.assertEqual(response.status_code, 200, response.json)
+        self.assertEqual(response.json["tab_count"], 3)
+        self.assertEqual(response.json["website_count"], 2)
+        self.assertEqual(response.json["skipped_private"], 0)
+
+        rows = list_open_tabs(db_path=self.database)
+        self.assertEqual(
+            {row["hostname"]: row["tab_count"] for row in rows},
+            {"one.example.test": 2, "two.example.test": 1},
+        )
+        self.assertEqual(len(list_discovered_applications(db_path=self.database)), 2)
+
+    def test_open_tab_scan_rejects_paths_and_oversized_snapshots(self):
+        token = self.pair()
+        self.enable_discovery(automatic_registration=True)
+        path_response = self.authorized_post(
+            "/api/discovery/open-tabs",
+            token,
+            {"origins": ["https://example.test/private"]},
+        )
+        large_response = self.authorized_post(
+            "/api/discovery/open-tabs",
+            token,
+            {"origins": ["https://example.test"] * 1001},
+        )
+        self.assertEqual(path_response.status_code, 400)
+        self.assertIn(large_response.status_code, (400, 413))
+        self.assertEqual(list_open_tabs(db_path=self.database), [])
+
+    def test_open_tab_scan_skips_local_and_private_origins(self):
+        token = self.pair()
+        self.enable_discovery(automatic_registration=True)
+        response = self.authorized_post(
+            "/api/discovery/open-tabs",
+            token,
+            {
+                "origins": [
+                    "http://127.0.0.1:8501",
+                    "http://localhost:5000",
+                    "https://public.example.test",
+                ],
+            },
+        )
+        self.assertEqual(response.status_code, 200, response.json)
+        self.assertEqual(response.json["tab_count"], 3)
+        self.assertEqual(response.json["website_count"], 1)
+        self.assertEqual(response.json["skipped_private"], 2)
+        self.assertEqual(
+            [row["hostname"] for row in list_open_tabs(db_path=self.database)],
+            ["public.example.test"],
+        )
+
     def test_authenticated_operator_api_actions_and_history(self):
         token = self.pair()
         self.enable_discovery()
@@ -434,10 +501,19 @@ class BrowserDiscoveryTests(unittest.TestCase):
         manifest = json.loads((extension_directory / "manifest.json").read_text())
         self.assertEqual(manifest["manifest_version"], 3)
         self.assertEqual(manifest["incognito"], "not_allowed")
-        self.assertEqual(set(manifest["permissions"]), {"webNavigation", "storage"})
+        self.assertEqual(
+            set(manifest["permissions"]),
+            {"webNavigation", "storage", "scripting"},
+        )
+        self.assertEqual(set(manifest["optional_permissions"]), {"tabs"})
+        self.assertEqual(set(manifest["optional_permissions"]), {"tabs"})
         self.assertEqual(
             set(manifest["host_permissions"]),
-            {"http://127.0.0.1:5000/*"},
+            {"http://127.0.0.1:5001/*"},
+        )
+        self.assertEqual(
+            set(manifest["optional_host_permissions"]),
+            {"http://*/*", "https://*/*"},
         )
         background = (extension_directory / "background.js").read_text()
         self.assertIn("origin,", background)
